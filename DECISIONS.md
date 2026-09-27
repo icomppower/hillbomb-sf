@@ -95,3 +95,7 @@ removals from the bay-crossing fork are logged here with a reason. bay-crossing'
   load as one backdrop mesh (`src/world/BayBridge.js`). Most of it lies east of the terrain domain, over open water.
 - **D23** Audio needs ffmpeg with libopus; this machine has none on PATH, so `ffmpeg-static` is a dev dependency
   (`tools/audio/lib.mjs` falls back to it). The game ships no runtime dependencies.
+- **D24** Director calmed after play feedback ("they change angle for no reason" early on): the rival cam needs a real
+  pass (≥ 1.5 m/s closing) and ≥ 12 s of racing, so the start bunch no longer trips it; the stair low-track covers
+  only flights ≥ 20 m (the upper concrete and the long wooden flight); a cut back to the chase holds ≥ 6 s. First
+  30 s: 9 cuts → 6.
