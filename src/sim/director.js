@@ -103,15 +103,15 @@ export class Director {
 
 			case 'steps': {
 
-				// low at the side of the flight, a little down it, tracking the rider
+				// low at the side of the flight, a few steps down from the rider, looking back up at it
 				const f = r.flights[ sh.flight ];
-				const sc = Math.min( f.s1 + 1, f.s0 + ( f.s1 - f.s0 ) * 0.75 );
+				const sc = Math.min( f.s1 + 1, Math.max( f.s0 + 3, sh.s0 + 9 ) );
 				const side = sh.side, room = side > 0 ? r.wallRight( sc ) : r.wallLeft( sc );
-				const off = side * Math.max( 0.6, Math.min( room - 0.35, r.halfWidth( sc ) + 1.4 ) );
-				r.world( sc, off, 0.55, out.eye );
+				const off = side * Math.max( 0.4, Math.min( room - 0.35, r.halfWidth( sc ) + 0.6 ) );
+				r.world( sc, off, 0.9, out.eye );
 				Object.assign( out.target, rider );
-				out.target.y += 0.7;
-				out.fov = 58;
+				out.target.y += 0.6;
+				out.fov = 60;
 				break;
 
 			}
@@ -160,12 +160,17 @@ export class Director {
 
 			case 'finish': {
 
-				// on the finish line facing back north up the Embarcadero, the clock tower overhead
-				const L = r.length, side = r.wallLeft( L ) < r.wallRight( L ) ? - 1 : 1;
-				r.world( L, side * Math.min( 3.5, r.halfWidth( L ) - 0.5 ), 1.1, out.eye );
-				r.world( Math.max( 0, L - 70 ), 0, 5, out.target );
-				out.target.y += 3.5;
-				out.fov = 64;
+				// past the line on the open side of the promenade, facing back north up the Embarcadero through the
+				// finish gantry, the clock tower rising at the edge of the frame
+				const L = r.length, t = r.tangent( L ), c = r.center( L );
+				const side = r.wallLeft( L ) < r.wallRight( L ) ? 1 : - 1; // away from the Ferry Building
+				const off = side * Math.min( 3.5, r.halfWidth( L ) - 0.5 );
+				out.eye.x = c.x + t.x * 14 + t.rx * off;
+				out.eye.z = c.z + t.z * 14 + t.rz * off;
+				out.eye.y = r.height( L ) + 1.2;
+				r.world( Math.max( 0, L - 60 ), - off * 0.4, 0, out.target );
+				out.target.y += 7;
+				out.fov = 72;
 				break;
 
 			}
@@ -173,12 +178,12 @@ export class Director {
 			default: {
 
 				// chase: behind and above, inside the walls
-				const sb = Math.max( 0, p.s - 5.5 ), e = r.edges( sb );
+				const sb = Math.max( 0, p.s - 4.4 ), e = r.edges( sb );
 				const l = Math.max( e.left + 0.3, Math.min( e.right - 0.3, p.l * 0.7 ) );
-				r.world( sb, l, 2.2, out.eye );
-				out.eye.y = Math.max( out.eye.y, rider.y + 1.3 );
-				r.world( Math.min( r.length, p.s + 5 ), p.l * 0.5, 0.8, out.target );
-				out.target.y = Math.max( out.target.y, rider.y + 0.6 );
+				r.world( sb, l, 1.95, out.eye );
+				out.eye.y = Math.max( out.eye.y, rider.y + 1.0 );
+				r.world( Math.min( r.length, p.s + 6 ), p.l * 0.5, 0.7, out.target );
+				out.target.y = Math.max( out.target.y, rider.y + 0.35 );
 				out.fov = 62;
 
 			}

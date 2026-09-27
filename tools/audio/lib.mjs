@@ -1,5 +1,9 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
+// ffmpeg from PATH, else the ffmpeg-static dev dependency
+const FFMPEG = ( () => { try { execFileSync( FFMPEG, [ '-version' ], { stdio: 'ignore' } ); return 'ffmpeg'; } catch ( e ) { return createRequire( import.meta.url )( 'ffmpeg-static' ); } } )();
+export { FFMPEG };
 export const SR = 48000;
 // decode -> array of Float32Array channels at 48 kHz
 export function decode( file, ch = 1, from = 0, dur = 0, filters = '' ) {
@@ -9,7 +13,7 @@ export function decode( file, ch = 1, from = 0, dur = 0, filters = '' ) {
 	args.push( '-i', file );
 	if ( filters ) args.push( '-af', filters );
 	args.push( '-ac', String( ch ), '-ar', String( SR ), '-f', 'f32le', '-' );
-	const buf = execFileSync( 'ffmpeg', args, { maxBuffer: 1 << 30 } );
+	const buf = execFileSync( FFMPEG, args, { maxBuffer: 1 << 30 } );
 	const all = new Float32Array( buf.buffer, buf.byteOffset, buf.length / 4 );
 	const n = all.length / ch;
 	const out = [];
@@ -39,12 +43,12 @@ export function peak( chans ) { let p = 0; for ( const c of chans ) for ( const 
 export function rms( chans ) { let s = 0, n = 0; for ( const c of chans ) { for ( const v of c ) s += v * v; n += c.length; } return Math.sqrt( s / n ); }
 export function gain( chans, g ) { for ( const c of chans ) for ( let i = 0; i < c.length; i ++ ) c[ i ] *= g; return chans; }
 export function lufs( file ) { // integrated loudness via ffmpeg ebur128
-	const r = execFileSync( 'ffmpeg', [ '-hide_banner', '-nostats', '-i', file, '-af', 'ebur128=peak=true', '-f', 'null', '-' ], { stdio: [ 'ignore', 'pipe', 'pipe' ] } );
+	const r = execFileSync( FFMPEG, [ '-hide_banner', '-nostats', '-i', file, '-af', 'ebur128=peak=true', '-f', 'null', '-' ], { stdio: [ 'ignore', 'pipe', 'pipe' ] } );
 	return r;
 }
 export function lufsOf( file ) {
 	try {
-		const out = execFileSync( 'sh', [ '-c', `ffmpeg -hide_banner -nostats -i "${ file }" -af ebur128=peak=true -f null - 2>&1 | grep -A12 Summary` ] ).toString();
+		const out = execFileSync( 'sh', [ '-c', `"${ FFMPEG }" -hide_banner -nostats -i "${ file }" -af ebur128=peak=true -f null - 2>&1 | grep -A12 Summary` ] ).toString();
 		const I = Number( ( out.match( /I:\s+(-?[\d.]+) LUFS/ ) || [] )[ 1 ] );
 		const LRA = Number( ( out.match( /LRA:\s+(-?[\d.]+) LU/ ) || [] )[ 1 ] );
 		const TP = Number( ( out.match( /Peak:\s+(-?[\d.]+) dBFS/ ) || [] )[ 1 ] );
@@ -72,7 +76,7 @@ export function fade( chans, inS, outS ) {
 	return chans;
 }
 export function encode( wav, out, kbps, ch ) {
-	execFileSync( 'ffmpeg', [ '-v', 'error', '-y', '-i', wav, '-ac', String( ch ), '-c:a', 'libopus', '-b:a', kbps + 'k', '-vbr', 'on', '-application', 'audio', out ] );
+	execFileSync( FFMPEG, [ '-v', 'error', '-y', '-i', wav, '-ac', String( ch ), '-c:a', 'libopus', '-b:a', kbps + 'k', '-vbr', 'on', '-application', 'audio', out ] );
 }
 // onset/event detection on a mono signal. returns [{s, e, pk}] in samples
 export function events( x, { from = 0, to = Infinity, minGap = 0.25, maxLen = 0.5, minLen = 0.06, thrDb = 12, relEnd = 30, pre = 0.012 } = {} ) {

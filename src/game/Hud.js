@@ -28,7 +28,7 @@ const CSS = `
 .hb-toast.is-on{opacity:1;transform:none}.hb-toast.is-good{color:#8cff9a}.hb-toast.is-bad{color:#ff8a7a}.hb-toast.is-trick{color:#ffd166}
 .hb-strip{position:absolute;left:max(16px,env(safe-area-inset-left));right:max(16px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));height:34px;padding:0 10px}
 .hb-strip canvas{width:100%;height:100%;display:block}
-.hb-root.has-touch .hb-strip{bottom:auto;top:calc(max(14px,env(safe-area-inset-top)) + 58px);height:26px}
+.hb-root.has-touch .hb-strip{bottom:auto;top:calc(max(14px,env(safe-area-inset-top)) + 90px);height:26px}
 .hb-screen{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:auto;background:radial-gradient(ellipse at 50% 60%,rgba(0,0,0,.15),rgba(0,0,0,.6))}
 .hb-screen.is-on{display:flex}
 .hb-panel{width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:22px 22px 18px}
@@ -187,6 +187,7 @@ export class Hud {
 	_screen( el, html ) {
 
 		for ( const s of [ this.el.title, this.el.pause, this.el.settings, this.el.results ] ) s.classList.toggle( 'is-on', s === el && !! html );
+		if ( ! el ) return null;
 		if ( html ) el.firstElementChild.innerHTML = html;
 		return el.firstElementChild;
 

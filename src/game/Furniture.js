@@ -235,6 +235,7 @@ export function buildFurniture( route, heightAt ) {
 	const material = new Material( {
 		name: 'furniture',
 		vertexColors: true,
+		side: 'double', // the kicker wedges are built face by face
 		surface: /* wgsl */`
 	let marker = in.uv.x;
 	var albedo = in.color.rgb;

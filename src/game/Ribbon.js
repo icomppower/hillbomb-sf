@@ -24,7 +24,8 @@ export function buildRibbon( route ) {
 
 	};
 
-	const quad = ( a, b, c, d ) => I.push( a, b, c, a, c, d );
+	// a, b, c, d go clockwise seen from the face's front: wind them counter-clockwise (front faces are CCW)
+	const quad = ( a, b, c, d ) => I.push( a, c, b, a, d, c );
 	const t = {}, w = {};
 	const inFlight = ( s ) => route.flightAt( s ) !== null;
 
