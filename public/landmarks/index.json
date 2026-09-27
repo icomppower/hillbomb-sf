@@ -16,24 +16,13 @@
    "ground": 0,
    "lods": [
     {
-     "name": "golden-gate-bridge_lod0.glb",
-     "triangles": 6888,
-     "meshes": 3,
-     "sha256": "000ed3488c36c6c7941fcc98242285cb7a3f11b9a3cea5a7e033129a7ff63a5a"
-    },
-    {
-     "name": "golden-gate-bridge_lod1.glb",
-     "triangles": 752,
-     "meshes": 2,
-     "sha256": "21fed9e3b532f86ee2a8c51644be3b22cd4ad35367afcc04e37fabac2c93fa74"
-    },
-    {
      "name": "golden-gate-bridge_lod2.glb",
      "triangles": 216,
      "meshes": 2,
      "sha256": "333fefd7ebb9e5ed46a2e67354eecff3245bad06fbb2595b7af5a6e84952af3f"
     }
-   ]
+   ],
+   "backdrop": "distant backdrop only: LOD2 kept, LOD0/LOD1 dropped (HILLBOMB SF D3)"
   },
   {
    "slug": "ferry-building",
@@ -132,24 +121,13 @@
    "ground": 40.68,
    "lods": [
     {
-     "name": "alcatraz_lod0.glb",
-     "triangles": 586,
-     "meshes": 3,
-     "sha256": "e39f83f35c5a5135c2221d65c3fbfc8e36792db086a93c4c6e41fd45ce88355f"
-    },
-    {
-     "name": "alcatraz_lod1.glb",
-     "triangles": 586,
-     "meshes": 3,
-     "sha256": "a25c52dcd5e9c14cca7146a858a7a7127ff4e70114a1cd0e4f700f10b077c6c5"
-    },
-    {
      "name": "alcatraz_lod2.glb",
      "triangles": 168,
      "meshes": 2,
      "sha256": "9acc0079d5714301b5e245a89582a24c1ff560598ec2c04e16b2cffd1d7ca9e3"
     }
-   ]
+   ],
+   "backdrop": "distant backdrop only: LOD2 kept, LOD0/LOD1 dropped (HILLBOMB SF D3)"
   }
  ]
 }

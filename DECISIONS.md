@@ -1,222 +1,84 @@
 # Decisions
 
-Seeded from SPEC §3. New decisions are appended with a one-line reason. The earlier Hong Kong run's decisions
-are in `docs/archive-hong-kong.md`.
+HILLBOMB SF, from the Notion build spec (page 3d71f269eaea819985a6d2518439924e). Deviations from the spec and
+removals from the bay-crossing fork are logged here with a reason. bay-crossing's own decisions are archived in
+`docs/bay-crossing/DECISIONS.md`.
 
-- **D1** Fork commit pinned; never pull upstream. Pinned: `1438b1abfcaee3267092b75573014f4d9b4a983c`
-  (Tidewater `main`, 2026-09-24). The remote is renamed `upstream` and is never fetched.
-- **D2** Slice, run 1: Ferry Building waterfront (Embarcadero ~Pier 1 to Pier 39) + ferry route to Sausalito +
-  Sausalito waterfront strip. Golden Gate Bridge, Alcatraz, Angel Island as distant low-LOD landmarks. Expand
-  only after G5 is green.
-- **D3** Ferry: procedural hull from published dimensions of a vessel on the route; cite the source.
-- **D4** Regular buildings: extruded in code from footprint + height, procedural facades. Landmarks (Ferry
-  Building, Coit Tower, Transamerica Pyramid, Golden Gate Bridge, Alcatraz): procedural or CC0 models
-  processed **offline in Blender** into LOD GLBs, committed, steps in `CREDITS.md`. No bespoke hand-modelled
-  assets.
-- **D5** Bathymetry from NOAA; any gaps filled and logged.
-- **D6** Quality tiers in one config: `low` = Mac mini M4 baseline (only tier gated now), `high` reserved for a
-  later PC run.
-- **D7** Remove: `src/game/`, vendors, island terrain, village, reef, vegetation, swash sim. Keep: ocean, sky,
-  post, boat controller, player, CDLOD, headless tests, audio system (bay ambience only if CC0; else mute).
-- **D8** `CREDITS.md`: Tidewater MIT notice + every data source with licence.
-- **D9** One Max 20x account. On usage limit: stop cleanly (`STATE.md` current); user resumes after reset.
-- **D10** Sessions are started by the user. No scripts that relaunch Claude Code automatically.
+## Fork removals (SPEC §1)
 
-## Appended
+- **D1** Removed the ferry and boats: `src/player/{BoatController,BoatSpray,FerryAutopilot,FerryController,Player}.js`,
+  `src/world/{BoatModel,FerryModel,FerrySpec}.js`, `src/world/boat/`, `src/ocean/WakeSim.js` (the wake needs a
+  boat), `public/ferry/`, `tools/ferry/`, the boat lights and hull mask in `App.js`, their tests.
+- **D2** Removed the Sausalito building tiles (the nine tiles i ≤ 2, j ≤ 4 in `public/buildings/`). The index lists
+  them under `removed`; every kept tile is byte-identical to bay-crossing. `tools/buildings/build.mjs` would still
+  rebuild them, so it stays as provenance only (the route never needs a building re-bake).
+- **D3** Golden Gate Bridge and Alcatraz stay as distant backdrop at LOD2 only (LOD0/LOD1 files dropped;
+  `public/landmarks/index.json` marks them `backdrop`; the loader clamps the level to what a landmark ships).
+- **D4** Removed the fishing, swimming, beach, bird-song, whale and boat audio (39 files). Kept `wind`, `pier_lap`
+  (water against the Embarcadero sea wall) and `gull`.
+- **D5** Removed the tourist layer: waypoints, landmark signs, places (`Waypoints.js`, `Places.js`, `Signs.js`) and
+  the bay-crossing UI (`src/ui/`: panel toolkit, boat gauges, walking help) and soundscape (`src/audio/`). The game
+  has its own lean HUD and menus (`src/game/Hud.js`) and audio (`src/game/Audio.js`).
+- **D6** bay-crossing's gates (`gates/g0..g7`), shots, keyart and run docs are removed or archived under
+  `docs/bay-crossing/`; HILLBOMB's gates follow SPEC §12.
 
-- **D11** `verify.sh` runs every gate twice: once against its negative fixture (must FAIL) and once for real
-  (must PASS). A gate is green only when both hold, so the negative fixture is re-proved on every run.
-  Reason: §5 makes the negative fixture a precondition of every positive run.
-- **D12** G6 is advisory: `verify.sh` runs it but its result never changes the exit code.
-- **D13** SF footprints are published under ODC PDDL 1.0, not CC0 as §2 says. Both are public-domain
-  dedications; the portal's actual licence is what `CREDITS.md` records. Reason: record the licence as found.
-- **D14** One frame for everything: WGS84 / UTM 10N (EPSG:32610) metres, NAVD88 heights, slice extent
-  E 544800–554208, N 4182000–4191600, 3 m raster grid (`data/slice.json`). Both DEMs are fetched already
-  resampled onto that grid. Reason: one grid for terrain and seabed makes G2a and G3 simple.
-- **D15** Terrain comes from USGS 3DEP and seabed from the NOAA NCEI topobathy mosaic. Both services cover the
-  whole extent without gaps (G0 checks there are no no-data cells), so D5's gap fill isn't needed for run 1.
-  Reason: measured at G0.
-- **D16** Building heights are from 2016, so post-2016 towers (Salesforce Tower, 326 m, finished 2018) are
-  missing or wrong. Logged, not fixed in run 1. Reason: G0 found the tallest building is Transamerica
-  (260.8 m) and Salesforce Tower is absent.
-- **D17** D7 extended to everything bound to the island: wildlife (birds, crabs, shorebirds), the humpback,
-  debris, rocks, gulls and fish are removed with their assets (`public/models/*`) and asset tools
-  (`tools/characters`, `tools/props`). Tests for removed systems are deleted; `npm test` is the engine smoke test.
-  Reason: they read the island generator's masks and have no place in the bay slice.
-- **D18** The procedural island (`TerrainData`) is replaced by a generic `HeightField` (`src/world/HeightField.js`)
-  with the same accessors. It holds a flat −20 m seabed until G2a fills it. `TerrainGPU`, `Terrain`, the shore
-  field and the CDLOD terrain mesh are kept unchanged. World frame: `src/world/BayFrame.js` (x east, z south,
-  origin at the centre of the slice extent). Reason: the ocean, shore, spray and wake all read the heightfield
-  interface; swapping the source keeps them intact.
-- **D19** `tools/headless/app.mjs` boots the real App in headless Dawn (DOM shim, offscreen canvas texture,
-  fetch of `public/`). Gates measure its frames numerically, with one App per process. Reason: gate the
-  product itself, not stub harnesses.
-- **D20** Game sea level (y = 0) is local mean sea level: NAVD88 + 0.969 m (NOAA station 9414290, MSL 2.773 −
-  NAVD88 1.804 on the station datum, epoch 1983–2001), fetched and cached as a fifth G0 source. Reason: the
-  DEMs are NAVD88, which sits near MLLW in SF; a y = 0 sea at NAVD88 would flood the waterfront by ~1 m.
-- **D21** Terrain tiles: one 3200² grid at 3 m over the 9.6 km world square (aligned to the source grid, 32-cell
-  clamp margins east and west), Int16 centimetres above MSL, 16 × 16 tiles of 200², zlib level 9, in
-  `public/terrain/` (12 MB, committed). Merge: NCEI below the waterline, 3DEP lidar above, blended over ±1 m
-  of NCEI height. The runtime `HeightField` uses the full 3200 grid; the `low` tier may decimate it at G5.
-  Reason: native source resolution, deterministic, small enough to commit.
-- **D22** Piers and wharves are structures, not terrain: both DEMs are bare-earth, so the Embarcadero piers
-  appear as water. They come back as geometry (G2b/G2c) and colliders. Reason: measured at G2a.
-- **D23** Gates that run pipelines run them as child processes with network access blocked
-  (`gates/lib/no-network.mjs`), and pipelines read raw files only through `tools/data/cache.mjs`, which
-  checks each file against the manifest. Reason: §4, "pipelines read from cache, not the network", becomes
-  checkable.
-- **D24** Buildings: SF roof = LiDAR median first-return elevation (`median_1st_m`) converted to MSL, so rooftop
-  plant and spires are ignored; 34 footprints without it fall back to `hgt_median_m`. Sausalito: OSM `height`
-  (17), `building:levels` × 3 m (5), else a 6 m default (1,801 of 1,823, logged in `public/buildings/index.json`).
-  Base: lowest terrain under the footprint − 1 m, never deeper than 2 m below MSL, so pier sheds stand on the
-  water line. Tiles: the 600 m terrain grid by centroid, one deflated GLB each (`.glb.deflate`, 9 MB total,
-  committed). Facades are procedural in the material (storeys and bays from wall UVs; tint and class in vertex
-  colour; lit windows at night). Reason: LiDAR medians give believable massing; the default applies only where
-  OSM has nothing.
-- **D25** Footprints that contain a landmark anchor (`data/landmarks.json`: Ferry Building, Coit Tower,
-  Transamerica) are left out of the extruded tiles; the landmark models (G2c) replace them. Reason: the
-  Transamerica LiDAR median is 67.8 m against a 264 m peak, so an extruded prism would be a stub.
-- **D26** `earcut` (ISC) is a devDependency, used only by the offline building pipeline for roofs with holes.
-  Reason: robust, deterministic polygon triangulation; nothing ships at runtime.
-- **D27** A sixth G0 source, `landmarks-osm.json` (OSM, ODbL): Golden Gate tower legs, Coit Tower, Transamerica,
-  Alcatraz buildings, the Sausalito ferry terminal, Embarcadero piers and Ferry Building gates. It places the
-  landmarks and gives G3 an independent reference. Reason: OSM tower centres give a 1,280.1 m span against the
-  official 1,280 m.
-- **D28** Building LODs per tile: LOD0 full; LOD1 rings simplified to 1.5 m, buildings under 8 m tall and under
-  150 m² dropped; LOD2 outer rings simplified to 4 m, only buildings 20 m+ tall or 1,500 m²+ kept (569k / 150k /
-  15k triangles). Chosen by distance to the tile: < 900 m, < 2.5 km, beyond. Landmark LODs: < 1.5 km, < 5 km,
-  beyond. Building tiles are the 600 m nodes at depth 4 of the CDLOD quadtree over the 9.6 km domain (one merged
-  mesh per LOD per node). Reason: "merged per CDLOD tile with distant LODs".
-- **D29** G2c caps: "triangle cap" is split in two. City triangles (building + landmark LOD meshes submitted
-  per frame) are capped at 1.5 × measured, because a whole-frame cap cannot see LOD (terrain and ocean dominate:
-  LOD off moves frame triangles only 1.22×). Frame triangles (all passes) are capped at 1.25 × measured, draw
-  calls at 1.5 × measured, and per-tile LOD0 triangles at 1.25 × measured. Measured at five fixed views
-  (`gates/lib/views.mjs`) at 1920×1080 and frozen in SPEC-THRESHOLDS.md. Reason: the negatives (LOD off, unmerged
-  buildings) must be caught by the caps.
-- **D30** Three more G0 sources: NOAA ENC charted landmarks and bridge pylons (public domain), used as the
-  independent georeference, and the Golden Gate Ferry GTFS feed. The GTFS licence is not stated, so it is used
-  only for facts (terminal positions, published trip times → `public/ferry/schedule.json`); its route shapes
-  are not shipped and the zip stays in the gitignored cache. Reason: §2 requires a cited published schedule;
-  §7 fallback-before-block.
-- **D31** Ferry Building from OSM: the shed from the "San Francisco Ferry Building" outline, the clock tower
-  from its `building:part` stack (to 70 m, 83 m flagpole). Landmark anchors use polygon area centroids, not
-  vertex means (the Transamerica vertex mean was 15 m off). `data/landmarks.json` anchors are used only to
-  exclude DataSF footprints. Reason: G3 found the hand-entered Ferry tower anchor 13 m off the chart.
-- **D32** G3 control points: six gated (Ferry tower, Coit Tower, Transamerica, Golden Gate south tower vs NOAA
-  ENC; Pier 1 end vs OSM, the only pier whose OSM outline is the shed itself; Sausalito landing from GTFS vs
-  OSM). Two advisory: the north tower (the charted "North Light" is not the tower centre) and Alcatraz Light (OSM
-  and the chart disagree by 13.8 m and no third source covers Alcatraz, so Alcatraz placement is uncertain to
-  ~14 m). Tolerance calibrated to 10 m (worst gated error 6.45 m). Reason: every gated point compares two
-  independent surveys.
-- **D33** The ferry is MV Golden Gate (ex-Chinook), a Golden Gate Ferry catamaran: 43.7 m × 12.0 m, draft 1.5 m,
-  waterjets, 38 kn (Wikipedia, "MV Golden Gate"). Golden Gate Ferry runs route SSSF (GTFS) with its fleet and
-  rotates vessels between routes; no source fixes one hull to Sausalito, so the choice is "a fleet vessel on
-  the route". It is procedural in code (`src/world/FerryModel.js`), from the dimensions in `FerrySpec.js`.
-  Reason: D3.
-- **D34** G4 duration range, cited on both ends: lower = the geodesic distance between the GTFS terminals at the
-  published top speed (38 kn) = 8.56 min; upper = the published timetable, 30 min (every SSSF trip in GTFS). The
-  helmsman (`FerryAutopilot`) sails 8 kn within 400 m of each terminal and 22 kn on the open bay. That speed is a
-  setting, so the check proves route geometry, scale and physics give a timetable-consistent crossing, not the
-  vessel's real service speed. Reason: GTFS lists one duration (30 min), so no other range is published.
-- **D35** Ferry physics: a dedicated `FerryController` with BoatController's public surface (the lobster
-  controller is tuned to an 8 m boat with hard-coded constants). The Tidewater lobster boat is no longer
-  spawned. The ferry is helm-only in run 1: boarding goes straight to the wheelhouse, within 60 m of the
-  boarding point (the berth is on a pier with no walkable deck yet), and leaving the helm steps ashore on the
-  nearest dry ground. G toggles the helmsman (P is photo mode). Route planning: A* over the shipped bathymetry at 6 m, needing
-  ≥ 3.45 m at MSL in open water (draft + 1 m + MSL→MLLW) and ≥ 2.0 m within 150 m of a terminal (the NCEI grid
-  is 2.5–4.4 m at the Ferry Building gates), with pier sheds and OSM piers as obstacles. Departure from
-  Gate C (GTFS 43000), the deeper SSSF gate. Reason: G4.
-- **D36** G5 GPU memory is re-measured as the sum of footprint's "(graphics)" categories, where Metal/Dawn
-  allocations actually land. The first frozen cap (`G5.gpuMemoryMB = 28`) summed IOAccelerator|IOSurface,
-  missed ~95 % of GPU memory and could not see a 1.5 GB leak. It is removed and recalibrated (1.25 × measured
-  peak) with the owner's approval (BLOCKED.md, 2026-09-24, answered "Yes"). No other frozen value changes.
-- **D37** Mobile support, at the owner's request (2026-09-25), which overrides §1's "Desktop only".
-  - **Controls:** `src/ui/TouchControls.js` adds a left-thumb joystick (W/A/S/D; a full push forward is sprint or
-    boost), drag-to-look, and buttons E, G, jump, V, T and F. They feed the same Input state as the keyboard, so
-    the player and ferry code are unchanged.
-  - **Touch events, not pointer events:** every mobile browser delivers them with coordinates and per-finger
-    identifiers, and headless emulation reported pointer coordinates as 0, so only touch events are verifiable.
-  - **Quality:** a `mobile` tier (60 % render scale, 1024 shadows, no volumetric clouds or caustics, LOD bias 0.6)
-    is picked automatically on a coarse pointer.
-  - **Boat camera:** the orbit now scales with hull length (the ferry was inside the lobster boat's 13 m orbit).
-  - **Layout:** verified at 390×844 and 844×390 in phone emulation. Every control is hit-tested at its centre,
-    there are no overlaps with the HUD and no horizontal scroll. The joystick walks forward, a drag turns the
-    view, and E then G take the helm and start the autopilot.
-  - The G5 budget stays desktop `low` only. Real phone frame rates are not measured.
-- **D38** Building colours, at the owner's request (2026-09-25; "all the buildings are the same colour").
-  - **Walls:** typed palettes. Towers get glass/stone curtain walls (tower glass takes the building's tint in the
-    shader); mid-rise concrete, sandstone and brick; SF houses painted-Victorian pastels; Sausalito wood shingle
-    and white; pier sheds (bases over water) cream Beaux-Arts. ±8 % brightness per building.
-  - **Roofs:** the median colour of USDA NAIP aerial pixels inside each footprint (two new public-domain G0
-    sources, 1 m), shadow pixels excluded. Corrected for haze: dark-object subtraction (1st percentile per
-    channel), a stretch to the 99th percentile, and saturation ×1.5. The raw imagery gave a median roof
-    saturation of 0.07.
-  - **Exceptions:** buildings over 40 m use a roof palette, because relief displacement moves their roofs off
-    the footprint in NAIP. So do footprints with fewer than 12 usable pixels.
-  - **Result:** 9,981 of 10,309 roofs from imagery. G2b now checks colour variety (≥ 40 wall and ≥ 300 roof
-    colours, ≥ 70 % NAIP roofs), with a one-colour negative. Reason: the old palette was 12 near-identical
-    off-whites for walls and roofs.
-- **D39** Ground and water for the bay, at the owner's request (2026-09-25). This replaces Tidewater's tropical
-  island look (grass-green hills, coral sand, turquoise shallows).
-  - **Source:** a 4 m NAIP image over the whole 9.6 km terrain square (`naip-bay.tif`, the twelfth G0
-    source, public domain).
-  - **The map:** built by `tools/terrain/build.mjs` into `public/terrain/aerial.bin`. The haze correction uses
-    land-only statistics, with one offset and stretch shared by all channels to keep the image's colour balance
-    (per-channel correction turned streets magenta) and saturation ×1.2. Brightness is scaled so the median
-    land pixel is sRGB 105 (urban albedo ~0.15; the raw stretch gave 0.33–0.40). Water deeper than 1.5 m is
-    zeroed and 6 bits kept per channel: 4.0 MB instead of 15.4 MB.
-  - **Shader:** land above +1.2 m takes the map colour (with a little procedural detail), loses 90 % of the
-    sand-ripple relief, and becomes fully rough with half the specular. The seabed is bay mud.
-  - **Water:** turbid (absorption 0.5 / 0.16 / 0.26, scattering 0.075 / 0.085 / 0.055 per m, in
-    `WORLD.water`), and the clarity slider rescales around it.
-  - **G2a checks:** coverage, zeroed water, the median brightness, and the loader, with a missing-map negative.
-  - **Limit:** at street level 4 m pixels are coarse (no road markings).
-- **D40** `verify.sh` hardening. A gate's negative run must finish and print `NEGATIVE n/n` (every mutation
-  caught); a missing summary or any miss is a FAIL. Before this, a negative run that crashed (non-zero exit)
-  counted as "caught": G2a's new missing-map fixture threw inside the loader check, skipped its last two
-  mutations, and still passed. Fixed in G2a (loader errors are failures), and all gates re-proved:
-  40/40 mutations caught.
-- **D41** Baseline WebGPU limits, from the owner's Chrome crash (2026-09-26: "Failed to execute 'setPipeline' on
-  'GPUComputePassEncoder': parameter 1 is not of type 'GPUComputePipeline'"). `GPU.init()` clamps its wanted
-  limits to the adapter's, and the M4 offers more than WebGPU's defaults, so shaders over a default limit
-  compiled here and failed elsewhere; the failed pipeline was null and `setPipeline( null )` threw.
-  - **Causes** (reproduced by booting the App behind an adapter reporting the defaults): `ComputeMips` and the
-    ocean FFT mip kernel wrote 5 storage textures (limit 4); `Env SH` used 18 KB of workgroup memory (16 KB);
-    post passes declared module bindings neither stage used as vertex + fragment (17–21 vertex textures, 16);
-    Terrain and water sample 17 and 21 textures in the fragment stage (16).
-  - **Fixes:** mips in stages of ≤ `maxStorageTexturesPerShaderStage` levels (same two kernels on the M4); the
-    ocean's level 5 is stored by kernel B; `Env SH` on 64 threads; unused bindings get visibility 0. Below 21
-    sampled textures per stage, `GPU.reducedTextures` / define `REDUCED_TEXTURES` builds reduced variants:
-    terrain skips the far underwater map level; water drops the separate refraction target (scene copy
-    instead), cloud and hill shadow on the surface, and wake aeration. The M4 path is unchanged.
-  - **Guards:** clamped limits are logged; a failed pipeline is recorded in `GPU.failures` and its pass skipped
-    (compute, fullscreen, caustics; meshes already skipped); after precompile the App stops with one readable
-    message naming the shader and the root validation error.
-  - **Gate:** G7 (required). Caveat: Dawn on Metal stands in for Chrome on the owner's device; a limit the
-    proxy does not model, or a driver-specific shader bug, would not show here.
-- **D42** Waypoints, at the owner's request (2026-09-26: "maybe a few waypoint for explore the map").
-  - **What:** 8 named viewpoints in `src/world/Waypoints.js` (Ferry Building, Transamerica, Coit Tower, Alcatraz,
-    Golden Gate from outside the Gate, Sausalito, mid-bay, city from above). Keys 1–8, the Explore tab, or N
-    (next; also a touch button) fly the free camera there in 1.5–5 s, arcing up with the distance; a move key
-    takes over; F drops the walker at the spot.
-  - **Clearance:** buildings are not colliders, so `RoofGrid` (highest mesh point per 20 m cell, from the
-    full-detail building and landmark meshes) keeps flights above roofs as well as terrain.
-  - **Checks:** `test/waypoints.mjs` (real App, headless Dawn): each key lands exactly on its pose, the flight
-    never dips below terrain or a roof, the sight line to the target is clear, the frame is not blank, N wraps,
-    W cancels, F leaves; contact sheet `shots/waypoints.png`. Touch: all 8 controls hit-tested at 390×844 and
-    844×390 (no overlap, no horizontal scroll), and a tap on N shows the first waypoint.
-- **D43** Landmark signs, at the owner's request (2026-09-26: "maybe all main sf landmark get a sign so I could
-  see"). 18 places in `src/world/Places.js`: the 5 modelled landmarks, Sausalito, and 12 converted from WGS84
-  (Coit Tower and Transamerica come out within 1 m of their model anchors). Bay Bridge, Oracle Park, Treasure
-  Island and Tiburon are outside the slice; Salesforce Tower has no building.
-  - **Signs** (`src/ui/Signs.js`): a glass label with the distance, on a stem to the place. Hidden behind the
-    camera or off screen, when terrain or a roof blocks the view (sampled against the terrain and `RoofGrid`),
-    under an overlap with a nearer sign, or over a touch control. K or the Explore tab toggles them; photo mode
-    and the start screen hide them.
-  - **Flying there:** a click or tap on a sign flies to its waypoint, or to a view 350 m off from the camera's
-    side. With the mouse captured, the sign under the crosshair lights up and a click flies there. Numpad 1–8
-    now work like 1–8.
-  - **Checks:** `test/signs.mjs` (headless: anchors, each waypoint shows its own sign, Angel Island hides
-    Alcatraz from the north, all 12 other places reachable) and a browser check (desktop and phone: no signs
-    on the start screen, no stacking, click / aim-click / tap fly there, K and photo mode hide them, touch
-    controls stay tappable with signs up).
+## Course (SPEC §2)
+
+- **D7** The route is the shortest path over the OSM highway graph through 23 OSM via nodes (listed in
+  `tools/route/build.mjs`, `VIAS`), with snap links of ≤ 3.5 m between unconnected nodes (sidewalk ends, crossings).
+  Nothing is hand-drawn. The Embarcadero is reached over the mapped Greenwich St crossing to Herb Caen Way at Pier 23
+  (the nearest mapped crossing to Filbert; the spec's "Pier 23 → Pier 1"), and the sprint rides Herb Caen Way, the
+  waterfront promenade, south to the Ferry Building.
+- **D8** Start and finish vs the landmark anchors. The Coit Tower model's base reaches 11.3 m north of its anchor and
+  the Ferry Building model's west façade is 13.8 m from the clock-tower anchor, so a start or finish line within
+  10 m of either anchor would sit inside the model. The grid is on the tower's north terrace (2 m clear of the base,
+  tower directly behind, facing the bay) and the finish is on Herb Caen Way under the clock tower (5 m clear of the
+  façade). G3 therefore measures start and finish against each landmark's ground-level footprint (the convex hull of
+  its LOD0 mesh below ground + 12 m), not its centre point: within 10 m of the footprint, and the tower behind the
+  start / beside the finish.
+- **D9** The start: the terrace → the two short terrace flights → Telegraph Hill Blvd at the summit circle → the
+  boulevard's descent round the east side of the summit to the top of the Filbert Steps. A lap of the parking circle
+  was tried and dropped: the only OSM link from the terrace to the circle is the boulevard node the lap would exit
+  by, so the line doubled back on itself for 4 m (a hairpin through the start grid). The boulevard's descent does go
+  round the summit.
+- **D10** Measured at first bake: 1,659 m, 87.5 m drop (89.4 → 2.0 m local MSL), 13 stair flights. The spec's
+  expectation was 1.8–2.2 km / ≈ 80 m; the real line from the terrace is shorter once the corners are smoothed. The
+  measured values are frozen in `SPEC-THRESHOLDS.md`.
+- **D11** Curvature clamp: minimum radius max( 5 m, half-width + 2.5 m ), every violator smoothed per round.
+- **D12** Walls: the bake stores the free distance to the nearest building (DataSF footprints + landmark hulls) on
+  each side of every sample. Where a wall reaches into the corridor (the foot of the Filbert Steps runs hard along an
+  apartment block) the centreline is pushed into the gap, narrowing the path only if the gap is narrower. The ribbon
+  and the corridor limits never reach into a wall.
+- **D13** Stair flights: maximal runs of OSM `highway=steps`, split at OSM way boundaries and at turns > 30° with a
+  2.5 m landing; each flight is linear top → bottom with `step_count` risers (else 0.17 m). Kickers sit at the real
+  features the spec lists, with the Embarcadero planters/benches every 110 m on alternating sides.
+- **D14** The terrain is flattened to the ribbon at load (`src/game/TerrainFlatten.js`), not in the tiles, so the
+  reused 3DEP tiles stay byte-identical to bay-crossing (G0).
+- **D15** Parked cars: along the OSM Montgomery and Sansome street ways, against the kerb, ≥ 4 m clear of the
+  corridor near the line. Street props: OSM lamps, benches and trees within 30 m; palms and lamps seeded along the
+  promenade and streets where OSM maps none within 25 m.
+
+## Ride model (SPEC §3)
+
+- **D16** The Astra model is kept exactly (constants in `BIKE`), including pedal and brake applying in the air.
+  Two readings made explicit: the wheel probes read the stair treads (`route.probe`), while the along-slope gravity,
+  the ground velocity `gv` and the body floor read the smooth flight line, so a riser does not register as a 20 m/s
+  vertical ground velocity (which would fire the impact-crash test on every step).
+- **D17** Addition: the route's real corners. Holding a line through a bend takes v²κ of lateral grip, applied to the
+  lateral velocity on the ground. Astra's track was straight; the SF line is not, and the AI's curvature-derived
+  speed profile (§5) presumes corners matter.
+- **D18** Addition: building walls. Past the hard limit on a side where the limit is a building wall, a glancing
+  touch (< 2.5 m/s lateral) scrapes along the wall (speed scrub, bounce); a harder hit is a crash. Off the open side
+  it is always a crash. On stairs and wooden landings the open-side margin is 1 m (railings, garden beds and drops),
+  elsewhere 2.5 m.
+- **D19** Wet factor is height-banded like the fog: ground below 45 m soaks up to twice as fast as the summit
+  (`wetAt` in `race.js`). The marine layer is densest at the water.
+
+## Race (SPEC §5, §6)
+
+- **D20** The fog point: one of sections 2–6 uniformly, then a point inside it, triggered when the leading rider
+  reaches it.
+- **D21** AI tuning targets (measured over 30 seeds, `tools/sim`): NOB 0 % of runs with a crash, DOGPATCH 47 %
+  (spec ≈ 35 %), SUTRO 57 % (spec ≈ 50 %), all finish, spread ≤ 25 % on the gate seeds. DOGPATCH's crashes come at the
+  tight wet corner below the last flight rather than on the wooden flights themselves: the wooden flights are nearly
+  straight, so speed alone does not throw a rider off them; the spec's "mostly on wet wood" holds only loosely.

@@ -48,186 +48,6 @@
  },
  "files": [
   {
-   "name": "b_0_1.glb.deflate",
-   "triangles": 2721,
-   "sha256": "3b32ba962ec690f38dad67edd4af3da7086ae5592a54d7affd7f6483b4ac0976",
-   "i": 0,
-   "j": 1,
-   "buildings": 123,
-   "lods": [
-    {
-     "name": "b_0_1_l1.glb.deflate",
-     "triangles": 790,
-     "sha256": "3dd6ca202ecad7d97e6d9e66ec469c915102a8c152071ec7ba0f6918ea402740"
-    },
-    {
-     "name": "b_0_1_l2.glb.deflate",
-     "triangles": 69,
-     "sha256": "e45652f6c4d24bbc9718f6069df9b7a999cde6bc3564883fb9d56b2bbea4b88c"
-    }
-   ]
-  },
-  {
-   "name": "b_1_1.glb.deflate",
-   "triangles": 55,
-   "sha256": "7e75d1999c2383bd050bf08d6f131509057b9b5d9ef3350c579cca135c003a66",
-   "i": 1,
-   "j": 1,
-   "buildings": 4,
-   "lods": [
-    {
-     "name": "b_1_1_l1.glb.deflate",
-     "triangles": 20,
-     "sha256": "8b0f8324e0c1b8cb03fa3bba3aec5c0f5acd36353ca28e4d4b1e5a323c7bc8b0"
-    },
-    {
-     "name": "b_1_1_l2.glb.deflate",
-     "triangles": 0,
-     "sha256": "81aa6bb3253b76b3bfeed1d80f005aa6000470ea981cce8182cc2f02757f62a6"
-    }
-   ]
-  },
-  {
-   "name": "b_0_2.glb.deflate",
-   "triangles": 13398,
-   "sha256": "8188ef6cbf3ca95b55791746af73cb57c3f4b1c0e9a61ee97175737254009d86",
-   "i": 0,
-   "j": 2,
-   "buildings": 516,
-   "lods": [
-    {
-     "name": "b_0_2_l1.glb.deflate",
-     "triangles": 3251,
-     "sha256": "6a04951a873b121228ab89e07836eb51c377e58b0a21f339e71b0464b7e7042f"
-    },
-    {
-     "name": "b_0_2_l2.glb.deflate",
-     "triangles": 0,
-     "sha256": "160a21cae28c3999cc3c720b1bd689ebc74eead8fe60e2fe1f39141bd26ac7a7"
-    }
-   ]
-  },
-  {
-   "name": "b_1_2.glb.deflate",
-   "triangles": 7999,
-   "sha256": "f772e416b1adbedb72d2dca4d2918990eee80c35f361b32fbe36c2af8893e012",
-   "i": 1,
-   "j": 2,
-   "buildings": 271,
-   "lods": [
-    {
-     "name": "b_1_2_l1.glb.deflate",
-     "triangles": 2438,
-     "sha256": "cdeebe3beb92017f83cabd86d1f58078fdd01baf0bcb3ddce00a5588b05b7f3c"
-    },
-    {
-     "name": "b_1_2_l2.glb.deflate",
-     "triangles": 0,
-     "sha256": "5356b09ef92a85fbc18f373eb05a696a118983734a514ec24c735d58d7dd7d27"
-    }
-   ]
-  },
-  {
-   "name": "b_2_2.glb.deflate",
-   "triangles": 74,
-   "sha256": "0bf5303d38ab97883282bd804c961f590920a382e16f7b33e9db891bb80946b0",
-   "i": 2,
-   "j": 2,
-   "buildings": 2,
-   "lods": [
-    {
-     "name": "b_2_2_l1.glb.deflate",
-     "triangles": 28,
-     "sha256": "d9f4490fba79e05bf6cd94fe7ede320fa8e8e8d491d677cce09b938a5e0c24d1"
-    },
-    {
-     "name": "b_2_2_l2.glb.deflate",
-     "triangles": 28,
-     "sha256": "3221660f27f251bec7b90d20c314f9c301369f21342612bf6884f44aa3949d2c"
-    }
-   ]
-  },
-  {
-   "name": "b_0_3.glb.deflate",
-   "triangles": 9807,
-   "sha256": "21804eba49077b3ca26e64cef4a4cec3fe1699934046e65bb248fd93ab4a3cd9",
-   "i": 0,
-   "j": 3,
-   "buildings": 314,
-   "lods": [
-    {
-     "name": "b_0_3_l1.glb.deflate",
-     "triangles": 3388,
-     "sha256": "b562f31af3e76f27dde8f35fdb605ad51fad58983d21ba69e801863fefd2198e"
-    },
-    {
-     "name": "b_0_3_l2.glb.deflate",
-     "triangles": 0,
-     "sha256": "6f3aecc734ebfc5fef18f2473b6917863d59edc6666a7183da0d754dd023be7a"
-    }
-   ]
-  },
-  {
-   "name": "b_1_3.glb.deflate",
-   "triangles": 14513,
-   "sha256": "6a0a4079f9a1172a97c575efd6ad8a6f176b357cc7d6bf0c374e0874bd0d2221",
-   "i": 1,
-   "j": 3,
-   "buildings": 446,
-   "lods": [
-    {
-     "name": "b_1_3_l1.glb.deflate",
-     "triangles": 3718,
-     "sha256": "30b3d3b5b1e96dba79058427a804cf0c999d06bcec81c31ce30a3be6c219a206"
-    },
-    {
-     "name": "b_1_3_l2.glb.deflate",
-     "triangles": 0,
-     "sha256": "04be403d7e499fd3031b5abd255d814ac43a80d743dd0d700f99e9d4ce299575"
-    }
-   ]
-  },
-  {
-   "name": "b_0_4.glb.deflate",
-   "triangles": 1101,
-   "sha256": "38fb4d1f22075de1ef2f918821a2c11c4c07186aa4f8f3f080ac490399652120",
-   "i": 0,
-   "j": 4,
-   "buildings": 33,
-   "lods": [
-    {
-     "name": "b_0_4_l1.glb.deflate",
-     "triangles": 232,
-     "sha256": "89d496ed7ea7ea29ebecb2aa7c79f6bb1e8d45633f8e1c30498154adac6884b7"
-    },
-    {
-     "name": "b_0_4_l2.glb.deflate",
-     "triangles": 0,
-     "sha256": "c2fea2b053a7db5afceacd60ac822902987a0eddafbb2b0561720978d7674ca0"
-    }
-   ]
-  },
-  {
-   "name": "b_1_4.glb.deflate",
-   "triangles": 2792,
-   "sha256": "13f375d11a604d238d6f906545869465b239b27fea69982d7df3b84f303b6cf8",
-   "i": 1,
-   "j": 4,
-   "buildings": 114,
-   "lods": [
-    {
-     "name": "b_1_4_l1.glb.deflate",
-     "triangles": 329,
-     "sha256": "1e7e714746a2c44e615412ba0e9ea80e1cd7d93418f00cdc34ae0fd053f6343b"
-    },
-    {
-     "name": "b_1_4_l2.glb.deflate",
-     "triangles": 22,
-     "sha256": "447ec60eb5897933db02d8e645dde66913c3f2e1589c4fc2219f796c4af2be20"
-    }
-   ]
-  },
-  {
    "name": "b_10_10.glb.deflate",
    "triangles": 31,
    "sha256": "6aa80490d56ea2a5e375a2c53383ddaa16dcfd991854bc47bee65110fc79e5f1",
@@ -827,5 +647,19 @@
     }
    ]
   }
- ]
+ ],
+ "removed": {
+  "note": "HILLBOMB SF: the Sausalito tiles (i<=2, j<=4) are dropped from the fork (DECISIONS D2); every remaining tile is byte-identical to bay-crossing",
+  "tiles": [
+   "b_0_1.glb.deflate",
+   "b_1_1.glb.deflate",
+   "b_0_2.glb.deflate",
+   "b_1_2.glb.deflate",
+   "b_2_2.glb.deflate",
+   "b_0_3.glb.deflate",
+   "b_1_3.glb.deflate",
+   "b_0_4.glb.deflate",
+   "b_1_4.glb.deflate"
+  ]
+ }
 }

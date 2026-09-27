@@ -76,7 +76,8 @@ export async function loadLandmarks( base = ( import.meta.env && import.meta.env
 
 			const u = lm.userData, [ ax, az ] = u.landmark.anchor;
 			const d = Math.hypot( p.x - ax, p.z - az );
-			const level = d < d0 * k ? 0 : d < d1 * k ? 1 : 2;
+			// backdrop landmarks ship only their far LOD (index.json `backdrop`)
+			const level = Math.min( u.lods.length - 1, d < d0 * k ? 0 : d < d1 * k ? 1 : 2 );
 			if ( level !== u.level ) { u.lods.forEach( ( g, i ) => { g.visible = i === level; } ); u.level = level; }
 
 		}

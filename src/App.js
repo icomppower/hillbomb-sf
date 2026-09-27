@@ -26,8 +26,9 @@ import { TerrainGPU } from './world/TerrainGPU.js';
 import { Terrain } from './world/Terrain.js';
 import { computeShoreField } from './world/ShoreField.js';
 import { WORLD } from './world/WorldLayout.js';
-import { Colliders } from './world/Colliders.js';
-import { FerryModel } from './world/FerryModel.js';
+import { loadRoute } from './sim/route.js';
+import { flattenTerrainUnderRoute } from './game/TerrainFlatten.js';
+import { Game } from './game/Game.js';
 
 import { OceanFFT } from './ocean/OceanFFT.js';
 import { WaterSurface } from './ocean/WaterSurface.js';
@@ -38,7 +39,7 @@ import { Caustics } from './ocean/Caustics.js';
 import { installUnderwaterLighting } from './ocean/UnderwaterLighting.js';
 import { RefractionPass } from './ocean/RefractionPass.js';
 import { installGroundBounce } from './materials/GroundBounce.js';
-import { LocalLights, addBoatLights } from './materials/LocalLights.js';
+import { LocalLights } from './materials/LocalLights.js';
 import { installContactShadows, ContactShadows } from './materials/ContactShadows.js';
 import { WaterQuery } from './ocean/WaterQuery.js';
 import { Breakers } from './ocean/Breakers.js';
@@ -51,13 +52,6 @@ import { Underwater, LENS_REACH } from './post/Underwater.js';
 import { PostFX } from './post/PostFX.js';
 import { AirHaze } from './post/AirHaze.js';
 import { FlyCamera } from './player/FlyCamera.js';
-import { Player } from './player/Player.js';
-import { FerryController } from './player/FerryController.js';
-import { FerryAutopilot } from './player/FerryAutopilot.js';
-import { BoatSpray } from './player/BoatSpray.js';
-import { WakeSim } from './ocean/WakeSim.js';
-import { SoundScape } from './audio/SoundScape.js';
-import { WAYPOINTS, waypointPose } from './world/Waypoints.js';
 import { RoofGrid } from './world/RoofGrid.js';
 import { updateCameraVelocity, useStaticVelocity } from './post/CameraVelocity.js';
 
@@ -68,7 +62,7 @@ export class App {
 	constructor() {
 
 		this.settings = {
-			timeOfDay: 16.2,
+			timeOfDay: 17.45, // golden hour (solar time); T steps to blue hour and night
 			sunAzimuth: 0, // degrees: turns the sun's daily path about the vertical
 			timeSpeed: 0, // hours per real second
 			exposure: 0.55,
@@ -133,28 +127,27 @@ export class App {
 		// shore field, GPU textures and terrain mesh are all derived from it.
 		await progress( 0.06, 'Laying the bay floor…' );
 		this.terrainData = await loadBayHeightField();
-		this.colliders = new Colliders();
+		// the course (public/route, tools/route/build.mjs): the track surface authority; the terrain under the
+		// ribbon is flattened to it so no 3 m terrain triangle pokes through
+		const base = ( import.meta.env && import.meta.env.BASE_URL ) || '/';
+		this.route = await loadRoute( base );
+		flattenTerrainUnderRoute( this.terrainData, this.route );
 		await progress( 0.19, 'Rolling in the swell…' );
 		this.shoreField = computeShoreField( this.terrainData, { res: 512, swellDir: [ WORLD.swellDir.x, WORLD.swellDir.y ] } );
 		this.terrainGPU = new TerrainGPU( this.terrainData, this.shoreField );
 		// the terrain applies the heightfield sun shadow (long hill shadows) in its own lighting
 		this.terrain = new Terrain( { scene, terrainData: this.terrainData, terrainGPU: this.terrainGPU, renderer } );
 		this.terrain.mesh.material.appliesHillShadow = true;
-		// SF + Sausalito buildings, extruded from footprints and LiDAR / OSM heights (public/buildings/)
+		// SF buildings, extruded from DataSF footprints and LiDAR heights (public/buildings/)
 		await progress( 0.22, 'Raising the city…' );
 		this.buildings = await loadBayBuildings();
 		scene.add( this.buildings );
-		// Golden Gate Bridge, Ferry Building, Coit Tower, Transamerica, Alcatraz (offline Blender LOD GLBs)
+		// Ferry Building, Coit Tower, Transamerica (offline Blender LOD GLBs); Golden Gate + Alcatraz as far backdrop
 		this.landmarks = await loadLandmarks();
 		scene.add( this.landmarks );
 		this.buildings.userData.lodBias = this.landmarks.userData.lodBias = Q.lodBias;
 		this.roofs = new RoofGrid( [ ...this.buildings.children.map( ( t ) => t.userData.lods[ 0 ] ), ...this.landmarks.children.map( ( l ) => l.userData.lods[ 0 ] ) ], WORLD.terrainSize );
 
-		// the ferry (MV Golden Gate class) and its route Ferry Building → Sausalito (public/ferry/)
-		const base = ( import.meta.env && import.meta.env.BASE_URL ) || '/';
-		this.ferryRoute = await ( await fetch( base + 'ferry/route.json' ) ).json();
-		this.boat = new FerryModel();
-		scene.add( this.boat.group );
 
 		// ---------------------------------------------------------------- ocean
 		await progress( 0.3, 'Simulating the ocean…' );
@@ -179,7 +172,6 @@ export class App {
 			if ( o.material ) for ( const mat of Array.isArray( o.material ) ? o.material : [ o.material ] ) mat.underwaterLighting = m;
 
 		} );
-		underwaterMode( this.boat.group, 'lite' );
 		underwaterMode( this.buildings, 'lite' );
 		underwaterMode( this.landmarks, 'lite' );
 
@@ -196,11 +188,9 @@ export class App {
 		this.sceneRenderer.onBeforeWater = () => this.refraction.render( G.seaLevel.value );
 		if ( this.sky.background ) this.sceneRenderer.background = this.sky.background;
 		// screen-space contact shadows for the sun from last frame's opaque depth (foliage only casts)
-		installContactShadows( { depthTexture: this.sceneRenderer.opaqueCopy.depthTexture, skip: [ this.boat.group ] } );
-		// lanterns, lamp posts, path lights, lit windows, the boat's cabin / navigation lights and the
-		// flashlight (L): nearest few packed into one small uniform array each frame
+		installContactShadows( { depthTexture: this.sceneRenderer.opaqueCopy.depthTexture, skip: [] } );
+		// the course's street lamps (added by the game): nearest few packed into one small uniform array each frame
 		this.localLights = new LocalLights();
-		addBoatLights( this.localLights, this.boat );
 		// rough, large or heavily overdrawn surfaces (ground, rocks, debris, foliage) take the local
 		// lights as Lambert only; the village, pier and boat get the full BRDF (glints on wet wood, metal)
 		for ( const root of [ this.terrain.mesh ] ) if ( root ) root.traverse( ( o ) => {
@@ -208,8 +198,6 @@ export class App {
 			if ( o.material ) for ( const m of Array.isArray( o.material ) ? o.material : [ o.material ] ) m.localLightsCheap = true;
 
 		} );
-		// the sea is not drawn inside the boat (its hull volume masks the surface)
-		this.sceneRenderer.addHullMask( this.boat.createHullVolumeGeometry(), this.boat.group );
 		this.waterMaterial = new WaterMaterial( {
 			surface: this.surface, sky: this.sky, sceneCopy: this.sceneRenderer.opaqueCopy, refraction: this.refraction,
 			hullMask: this.sceneRenderer.hullMaskRT.texture, hullMaskActive: this.sceneRenderer.hullMaskActive,
@@ -253,18 +241,13 @@ export class App {
 		// dust, pollen, salt aerosol, seed fluff and gnats drifting around the camera
 		this.airMotes = new AirMotes( { terrain: this.terrainGPU, clouds: this.clouds, csm: this.csm, reversedDepth: true } );
 		scene.add( this.airMotes.mesh );
-		const [ w0, w1 ] = this.ferryRoute.waypoints;
-		this.boatCtl = new FerryController( { model: this.boat, query: this.query, terrain: this.terrainData,
-			berth: { x: w0[ 0 ], z: w0[ 1 ], heading: Math.atan2( w1[ 0 ] - w0[ 0 ], w1[ 1 ] - w0[ 1 ] ) } } );
-		this.autopilot = null; // G: the helmsman sails the route (FerryAutopilot)
-		this.boatSpray = new BoatSpray( { boat: this.boatCtl, spray: this.spray } );
-		// interactive wake around the boat (Kelvin pattern, bow/stern waves, prop wash foam)
-		this.wake = new WakeSim( renderer, { terrainGPU: this.terrainGPU, boat: this.boatCtl, colliders: this.colliders } );
-		this.surface.wake = this.wake;
-		this.player = new Player( { camera, input: this.input, terrain: this.terrainData, colliders: this.colliders, query: this.query, boat: this.boatCtl } );
 		this.freeCam = qs.has( 'fly' );
-		this.waypoint = - 1; // last waypoint flown to (N goes to the next)
 		this.fly.groundAt = ( x, z ) => Math.max( this.terrainData.heightAt( x, z ), this.roofs.heightAt( x, z ) );
+
+		// the race: sim, riders, course furniture, camera director, HUD, audio (src/game/)
+		await progress( 0.32, 'Building the course…' );
+		this.game = new Game( this );
+		await this.game.init();
 
 		// ---------------------------------------------------------------- post
 		await progress( 0.34, 'Preparing the shaders…' );
@@ -286,16 +269,9 @@ export class App {
 		if ( qs.has( 'scale' ) ) this.settings.renderScale = Number( qs.get( 'scale' ) ) || 1;
 		this.setRenderScale( this.settings.renderScale );
 
-		// ---------------------------------------------------------------- audio
-		// recorded field recordings (public/audio, credits in public/audio/CREDITS.md); ?noAudio turns it off
-		this.audio = qs.has( 'noAudio' ) ? null : new SoundScape();
-		this.player.audio = this.audio;
-		this.boatCtl.onSlam = ( s ) => this.audio && this.audio.hullSlap( s );
 		engine.domElement.addEventListener( 'click', () => {
 
-			if ( window.__ui && window.__ui.isPointerOverUI ) return;
-			this.input.requestLock();
-			if ( this.audio ) this.audio.resume();
+			if ( this.game ) this.game.audio.resume();
 
 		} );
 
@@ -424,73 +400,18 @@ export class App {
 
 	}
 
-	// T: let the day run (about 8 minutes per day) or stop it
-	toggleTime() {
+	// T: golden hour → blue hour → night → golden hour (solar time in San Francisco, late September)
+	cycleTime() {
 
-		const s = this.settings;
-		if ( s.timeSpeed !== 0 ) {
-
-			this._timeSpeed = s.timeSpeed;
-			s.timeSpeed = 0;
-
-		} else {
-
-			s.timeSpeed = this._timeSpeed || 0.05;
-
-		}
-
-		if ( this.ui ) {
-
-			this.ui.s.advance = s.timeSpeed !== 0;
-			this.ui.ui.refresh();
-			this.ui.ui.toast( s.timeSpeed !== 0 ? 'Time running' : 'Time paused' );
-
-		}
+		const steps = [ [ 17.45, 'Golden hour' ], [ 18.4, 'Blue hour' ], [ 19.3, 'Night' ] ];
+		const k = steps.findIndex( ( [ h ] ) => Math.abs( h - this.settings.timeOfDay ) < 0.2 );
+		const [ h, name ] = steps[ ( k + 1 ) % steps.length ];
+		this.settings.timeOfDay = h;
+		return name;
 
 	}
 
-	// G: the helmsman takes the ferry along the route (again from the current position); G again hands it back
-	setAutopilot( on ) {
-
-		if ( on ) {
-
-			this.autopilot = new FerryAutopilot( this.ferryRoute );
-			this.boatCtl.driven = true;
-			this.boatCtl.moored = false;
-
-		} else this.autopilot = null;
-		if ( this.ui ) this.ui.ui.toast( on ? 'Autopilot: Ferry Building → Sausalito' : 'Autopilot off' );
-
-	}
-
-	// Waypoints (1–8, N = next): the free camera flies to a named viewpoint; F walks on from there.
-	goToWaypoint( i ) {
-
-		const w = WAYPOINTS[ i ], p = waypointPose( w );
-		this.waypoint = i;
-		this.setFreeCam( true );
-		this.fly.flyTo( p.position, p.yaw, p.pitch );
-		if ( this.ui ) this.ui.ui.toast( `${ i + 1 } · ${ w.name }` );
-
-	}
-
-	// A landmark sign was clicked: its waypoint, or a view of the place from the camera's side, ~350 m off and
-	// clear of the ground around it
-	goToPlace( a ) {
-
-		if ( a.waypoint !== undefined ) return this.goToWaypoint( a.waypoint );
-		const c = this.camera.position, dx = c.x - a.x, dz = c.z - a.z, d = Math.hypot( dx, dz ) || 1;
-		const x = a.x + dx / d * 350, z = a.z + dz / d * 350;
-		const y = Math.max( a.ground + 110, this.fly.groundAt( x, z ) + 40 );
-		const p = waypointPose( { eye: [ x, y, z ], at: [ a.x, a.ground + 10, a.z ] } );
-		this.waypoint = - 1;
-		this.setFreeCam( true );
-		this.fly.flyTo( p.position, p.yaw, p.pitch );
-		if ( this.ui ) this.ui.ui.toast( a.name );
-
-	}
-
-	// Free (debug) camera on F; the walker / boat resumes where it was left.
+	// Free (debug) camera on F: flies from the current view; F again hands the camera back to the race.
 	setFreeCam( on ) {
 
 		if ( on === this.freeCam ) return;
@@ -501,42 +422,7 @@ export class App {
 			this.fly.setPose( this.camera.position.clone(), e.y, e.x );
 			this.fly.velocity.set( 0, 0, 0 );
 
-		} else if ( this.player.mode !== 'boat' && this.player.mode !== 'deck' ) {
-
-			this.dropPlayerAtCamera();
-
 		}
-
-	}
-
-	// Leaving the free camera: the player continues from where the camera is, facing the same way,
-	// and falls from there (swimming at once if the camera is under water).
-	dropPlayerAtCamera() {
-
-		const p = this.player, c = this.camera.position;
-		const e = new Euler().setFromQuaternion( this.camera.quaternion, 'YXZ' );
-		p.yaw = e.y;
-		p.pitch = MathUtils.clamp( e.x, - 1.5, 1.5 );
-		p.velocity.set( 0, 0, 0 );
-		const ground = Math.max( this.terrainData.heightAt( c.x, c.z ), this.colliders.groundHeightAt( c.x, c.z, c.y ) );
-		const water = this.cameraWaterHeight ?? 0;
-		if ( c.y < water ) {
-
-			p.mode = 'swim';
-			p.position.set( c.x, Math.max( c.y - 0.16, ground + 0.3 ), c.z );
-
-		} else {
-
-			// drop from where the camera is: gravity brings you down onto the ground or a deck, or into
-			// the sea (the walker starts swimming once it is out of its depth)
-			p.mode = 'walk';
-			p.position.set( c.x, Math.max( c.y - 1.62, ground ), c.z );
-			p.grounded = false;
-
-		}
-
-		p.waterH = water;
-		p.waterMean = water;
 
 	}
 
@@ -594,36 +480,15 @@ export class App {
 		G.time.value += dt;
 		if ( s.timeSpeed !== 0 ) s.timeOfDay = ( s.timeOfDay + dt * s.timeSpeed + 24 ) % 24;
 
-		// ---- player / boat (boat physics first so the cameras follow this frame's pose)
-		if ( this.input.hit( 'KeyF' ) ) this.setFreeCam( ! this.freeCam );
-		if ( this.input.hit( 'KeyT' ) ) this.toggleTime();
-		if ( this.input.hit( 'KeyG' ) ) this.setAutopilot( ! this.autopilot );
-		for ( let i = 0; i < WAYPOINTS.length; i ++ ) if ( this.input.hit( 'Digit' + ( i + 1 ) ) || this.input.hit( 'Numpad' + ( i + 1 ) ) ) this.goToWaypoint( i );
-		if ( this.input.hit( 'KeyK' ) && this.ui ) this.ui.toggleSigns();
-		if ( this.input.hit( 'KeyN' ) ) this.goToWaypoint( ( this.waypoint + 1 ) % WAYPOINTS.length );
-		if ( this.input.hit( 'KeyL' ) ) {
-
-			const on = this.localLights.toggleFlashlight();
-			if ( this.ui ) this.ui.ui.toast( on ? 'Flashlight on' : 'Flashlight off' );
-
-		}
-
-		if ( this.input.hit( 'KeyM' ) && this.audio ) {
-
-			this.audio.setMuted( ! this.audio.muted );
-			if ( this.ui ) this.ui.ui.toast( this.audio.muted ? 'Sound off' : 'Sound on' );
-
-		}
-		this.boatCtl.update( dt );
-		this.boatSpray.update( dt );
-		this.wake.update( dt );
+		// ---- the race (fixed-step sim, riders, camera director) or the free camera
+		if ( this.input.hit( 'KeyF' ) && this.qs.has( 'debug' ) ) this.setFreeCam( ! this.freeCam );
+		this.game.update( dt );
 		if ( this.freeCam ) this.fly.update( dt );
-		else this.player.update( dt );
-		if ( this.autopilot ) this.autopilot.update( this.boatCtl, dt );
 		this.updateSun();
 
 		this.atmosphere.update( dt, this.camera.position.y );
 		this.applyAtmosphereReadback();
+		this.game.applyWeather();
 		if ( this.clouds ) this.clouds.update( dt, this.camera );
 		this.environment.update( dt );
 
@@ -631,7 +496,6 @@ export class App {
 		this.fft.update( dt );
 		this.seaDetail.update( dt );
 		this.query.setCamera( this.camera.position.x, this.camera.position.z );
-		this.boatCtl.queueQueries();
 		this.query.update();
 		if ( this.query.cpuValid ) {
 
@@ -656,13 +520,13 @@ export class App {
 		this.terrain.update( this.camera );
 		this.buildings.update( this.camera );
 		this.landmarks.update( this.camera );
-		this.boat.update( dt );
 		this.localLights.update( this.camera, dt );
 
 		// ---- render
 		G.exposure.value = s.exposure;
 		updateCameraVelocity( this.camera );
 		this.post.lens.update( dt, this.camera.position.y < ( this.cameraWaterHeight ?? 0 ) );
+		this.game.applyLens( dt );
 		if ( this.post.flare ) {
 
 			this.post.flare.setDepthHeight( this.sceneRenderer.sceneRT.height );
@@ -691,8 +555,7 @@ export class App {
 		GPU.submit();
 		this.profiler.update( dt );
 
-		this.updateAudio( dt );
-		if ( this.ui ) this.ui.update( dt );
+		this.game.afterRender( dt );
 		this.input.endFrame();
 
 	}
@@ -705,36 +568,6 @@ export class App {
 		this.settings.renderScale = scale;
 		this.post.setScale( scale );
 		if ( this.clouds ) this.clouds.resolutionScale = scale;
-
-	}
-
-	updateAudio( dt ) {
-
-		if ( ! this.audio || ! this.audio.enabled ) return;
-		const cam = this.camera;
-		const p = cam.position;
-		const f = this._af || ( this._af = { fwd: new Vector3(), up: new Vector3() } );
-		cam.getWorldDirection( f.fwd );
-		f.up.set( 0, 1, 0 ).applyQuaternion( cam.quaternion );
-		const h = this.cameraWaterHeight ?? 0;
-		const coast = this.terrainData.coastDistance( p.x, p.z ).d;
-		this.audio.update( dt, {
-			listener: { position: p, forward: f.fwd, up: f.up },
-			underwater: p.y < h ? 1 : 0,
-			depthBelowSurface: Math.max( 0, h - p.y ),
-			surfIntensity: Math.min( 1, this.shore.amplitude.value / 0.6 ),
-			distanceToShore: Math.abs( coast ),
-			coastDistance: coast,
-			waveHeight: this.shore.amplitude.value * 2,
-			windSpeed: G.windSpeed.value,
-			windDir: G.windDir.value,
-			daylight: 1 - G.night.value,
-			nearPier: Math.abs( p.x - WORLD.pier.x ) < 12 && p.z > WORLD.pier.zStart - 5 && p.z < WORLD.pier.zEnd + 8,
-			boat: {
-				active: this.boatCtl.driven, rpm: this.boatCtl.rpm, throttle: this.boatCtl.throttle, speed: this.boatCtl.velocity.length(),
-				position: this.boat.group.position, listenerInside: this.player.mode === 'boat' && this.player.camMode === 'first',
-			},
-		} );
 
 	}
 

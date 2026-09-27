@@ -1,9 +1,9 @@
-node_modules
-dist
-.DS_Store
-*.log
 
-# Victoria Harbour
+.DS_Store
 .verify/
-data/raw/
+*.log
+# Victoria Harbour
 data/cache/
+data/raw/
+dist
+node_modules

@@ -3,50 +3,42 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-	<title>SF Bay Crossing</title>
-	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f2a3d'/%3E%3Cpath d='M4 22h24M8 22V9M24 22V9M8 10q8 11 16 0' stroke='%23c0362c' stroke-width='2.4' fill='none'/%3E%3C/svg%3E" />
-	<link rel="preload" as="image" href="ui/keyart-720.jpg" imagesrcset="ui/keyart-720.jpg 1280w, ui/keyart.jpg 2560w" imagesizes="100vw" />
+	<title>HILLBOMB SF</title>
+	<meta name="description" content="A real-data downhill BMX race in San Francisco: Coit Tower, the Filbert Steps, the Embarcadero, the Ferry Building." />
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23141518'/%3E%3Cpath d='M5 9l7 5 5-2 10 12' stroke='%23ff7a1a' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='24' r='3' stroke='%23fff' stroke-width='2' fill='none'/%3E%3Ccircle cx='21' cy='24' r='3' stroke='%23fff' stroke-width='2' fill='none'/%3E%3C/svg%3E" />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Caveat+Brush&family=Kalam:wght@400;700&display=swap" rel="stylesheet" />
-	<link rel="stylesheet" href="/src/ui/ui.css" />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 	<style>
-		html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+		html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0b0c0e; touch-action: none; }
 		#app, #app canvas { display: block; }
-		#fps { position: fixed; top: 10px; left: 12px; z-index: 50; font: 500 12px/1.2 'JetBrains Mono', ui-monospace, monospace;
-			color: #e8f6ff; background: rgba(8, 14, 22, 0.55); padding: 5px 9px; border-radius: 6px; pointer-events: none;
-			backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); letter-spacing: 0.02em; }
+		#loader { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; padding: 0 16px 9vh;
+			background: radial-gradient(ellipse at 50% 30%, #3a2a1e 0%, #15161a 55%, #0b0c0e 100%); color: #f4f1ea;
+			font-family: Inter, system-ui, sans-serif; transition: opacity .6s; }
+		#loader.is-done { opacity: 0; pointer-events: none; }
+		.loader-inner { width: min(560px, 100%); }
+		.loader-kicker { margin: 0; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; opacity: .7; }
+		.loader-title { margin: 6px 0 4px; font: 900 clamp(44px, 12vw, 76px)/.95 Inter, sans-serif; letter-spacing: -.03em; }
+		.loader-title em { font-style: normal; color: #ff7a1a; }
+		.loader-tagline { margin: 0 0 22px; opacity: .8; font-size: 14px; line-height: 1.5; }
+		.loader-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; gap: 12px; }
+		.loader-meta { font-family: 'JetBrains Mono', monospace; opacity: .7; display: flex; gap: 12px; }
+		.loader-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
+		.loader-fill { height: 100%; width: 0; background: linear-gradient(90deg, #ffb35c, #ff7a1a); transition: width .2s; }
+		.loader-note { margin-top: 12px; font-size: 12px; opacity: .6; line-height: 1.5; }
+		#loader.is-error .loader-status { color: #ff8a7a; }
 	</style>
 </head>
 <body>
 	<div id="app"></div>
-	<div id="fps">-- fps</div>
-	<div id="loader" role="status" aria-live="polite" aria-label="Loading SF Bay Crossing">
-		<img class="loader-art" src="ui/keyart-720.jpg" srcset="ui/keyart-720.jpg 1280w, ui/keyart.jpg 2560w" sizes="100vw" alt="" decoding="async" fetchpriority="high" onload="this.classList.add('is-in')" />
-		<div class="loader-scrim"></div>
+	<div id="loader" role="status" aria-live="polite" aria-label="Loading HILLBOMB SF">
 		<div class="loader-inner">
-			<div class="loader-brand">
-				<p class="loader-kicker">San Francisco Bay, built from real data</p>
-				<h1 class="loader-title">BAY CROSSING</h1>
-				<p class="loader-tagline">Walk the Embarcadero, take the ferry from the Ferry Building past Alcatraz to Sausalito, and watch the Golden Gate from golden hour to night.</p>
-			</div>
-			<div class="loader-panel">
-				<div class="loader-row">
-					<span class="loader-status">Starting…</span>
-					<span class="loader-meta"><span class="loader-pct">0%</span><span class="loader-time">0:00</span></span>
-				</div>
-				<div class="loader-bar"><div class="loader-fill"></div><div class="loader-glint"></div></div>
-				<div class="loader-note">The first launch compiles the shaders and can take a minute or two. Later visits load much faster.</div>
-				<div class="loader-tips">
-					<span class="loader-tip-label">Tip</span>
-					<div class="loader-tip-list">
-						<p class="loader-tip">You start on the Embarcadero in front of the Ferry Building. The ferry is moored just offshore at Gate C: walk up and press <kbd>E</kbd> to take the helm.</p>
-						<p class="loader-tip">At the helm, <kbd>W</kbd>/<kbd>S</kbd> work the waterjets and <kbd>A</kbd>/<kbd>D</kbd> steer. Press <kbd>G</kbd> to let the autopilot sail the published route to Sausalito (about 18 minutes).</p>
-						<p class="loader-tip">The terrain, seabed and 10,000 buildings are real: USGS and NOAA elevation, San Francisco's LiDAR building heights, OpenStreetMap for Sausalito.</p>
-						<p class="loader-tip">Press <kbd>T</kbd> to let the day run, from golden hour to the lit-up night skyline. <kbd>F</kbd> frees the camera.</p>
-					</div>
-				</div>
-			</div>
+			<p class="loader-kicker">San Francisco · built from real data</p>
+			<h1 class="loader-title">HILL<em>BOMB</em> SF</h1>
+			<p class="loader-tagline">Coit Tower to the Ferry Building: down the Filbert Steps, across Montgomery and Sansome, flat out along the Embarcadero against three rivals, with the fog rolling in off the bay.</p>
+			<div class="loader-row"><span class="loader-status">Starting…</span><span class="loader-meta"><span class="loader-pct">0%</span><span class="loader-time">0:00</span></span></div>
+			<div class="loader-bar"><div class="loader-fill"></div></div>
+			<div class="loader-note">WebGPU required (recent Chrome, Edge or Safari, including iOS 26). The first launch compiles the shaders and can take a minute; later visits load faster.</div>
 		</div>
 	</div>
 	<script type="module" src="/src/main.js"></script>

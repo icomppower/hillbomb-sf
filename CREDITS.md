@@ -1,73 +1,73 @@
 # Credits
 
-The code in this repository is released under the MIT license (see `LICENSE`). The third-party
-assets below keep their own licences.
+The code in this repository is released under the MIT license (see `LICENSE`). Third-party assets keep their own
+licences.
+
+## HILLBOMB SF
+
+A fork of [SF Bay Crossing](https://github.com/icomppower/bay-crossing) (MIT), itself a fork of
+[Tidewater](https://github.com/dgreenheck/tidewater) (MIT, © its authors; see `LICENSE`), pinned at Tidewater
+commit `1438b1abfcaee3267092b75573014f4d9b4a983c`. The WebGPU/WGSL engine, CDLOD terrain, ocean, sky, clouds,
+post-processing, quality tiers and headless harness are Tidewater's and bay-crossing's; the real-data terrain,
+buildings and landmarks are bay-crossing's pipelines and tiles, reused unchanged.
+
+The ride model (`src/sim/bike.js`) re-implements the behaviour of the INKFALL "Astra" build's
+`app/physics.ts` (icomppower/inkfall, branch `inkfall-astra-shuimo`) with named constants.
+
+The bikes, riders, course ribbon, kickers, gates, props, cars and particles are generated in code.
 
 ## Audio: `public/audio/`
 
-42 field recordings from [Freesound](https://freesound.org), all released under
-[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). No attribution is required, but every file is
-credited with its author and source link in [`public/audio/CREDITS.md`](public/audio/CREDITS.md).
+CC0 recordings from [Freesound](https://freesound.org); every file is credited with its author and source link
+in [`public/audio/CREDITS.md`](public/audio/CREDITS.md).
 
-Recordists: YevgVerh, straget, Alex_hears_things, chris_dagorne, bruno.auzet, felix.blume, hdfreema,
-richardemoore, KaleidacousticsAudio, AugustSandberg, kyles, Pfannkuchn, 200221-WeanBekker, florianreichelt,
-Nox_Sound, ryansitz, SilentStrikeZ, SecureSubset, tbsounddesigns, qubodup, blaukreuz, wormer2, roboroo,
-squashy555, Soojay, coalcon, dubminister, nathankwright, SorenF109, LaScienceMusicale, KEVOY, mikewest,
-tosha73, paulprit, Mrthenoronha, mwchristian95, MrFossy, BranndyBottle, JoelMcDaniel, khenshom, ramattahatta,
-RatBird and Anthousai.
+## Geospatial data
 
-## Scanned beach debris: `public/models/debris/`
+Every source is fetched by script into `data/raw/` (checksums in `data/raw/MANIFEST.sha256`, licences in
+`data/raw/sources.json`; G0 checks both).
 
-Photogrammetry models from [Poly Haven](https://polyhaven.com), under
-[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/):
+| Cached file | Source | Licence |
+|---|---|---|
+| `sf-buildings.geojson` | [San Francisco Building Footprints](https://data.sf.gov/d/ynuv-fyni) (DataSF, City and County of San Francisco): footprints with LiDAR-derived heights (`hgt_median_m`, `peak_1st_m`) | ODC PDDL 1.0 — [public domain dedication](http://opendatacommons.org/licenses/pddl/1.0/) |
+| `landmarks-osm.json` | [OpenStreetMap](https://www.openstreetmap.org) landmark and waterfront features (bridge towers, Ferry Building, Coit Tower, Transamerica Pyramid, Alcatraz, Sausalito ferry terminal, Embarcadero piers), via the Overpass API | ODbL 1.0 — © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) |
+| `noaa-enc-landmarks.json`, `noaa-enc-pylons.json` | [NOAA ENC Direct to GIS](https://nauticalcharts.noaa.gov/data/enc-direct-to-gis.html) (Office of Coast Survey), harbour-scale charted landmarks and bridge pylons; used as the independent georeference (G3) | Public domain (US Government work) |
+| `naip-sf.tif`, `naip-sausalito.tif`, `naip-bay.tif` | [USDA NAIP](https://naip-usdaonline.hub.arcgis.com/) aerial orthoimagery (USGS The National Map NAIP ImageServer), natural colour resampled to 1 m (building boxes: each roof's colour is the median of the pixels inside its footprint) and 4 m (the whole terrain square: the ground colour map) | Public domain (US Government work) |
+| `terrain-3dep.tif` | [USGS 3D Elevation Program](https://www.usgs.gov/3d-elevation-program) (3DEPElevation ImageServer), resampled to the slice grid | Public domain (US Government work) |
+| `noaa-datums-9414290.json` | [NOAA CO-OPS tidal datums](https://tidesandcurrents.noaa.gov/datums.html?id=9414290), San Francisco station 9414290 (sets game sea level = local MSL) | Public domain (US Government work) |
+| `bathy-ncei.tif` | [NOAA NCEI](https://www.ncei.noaa.gov/products/coastal-elevation-models) coastal DEM mosaic (topobathy; DEM_mosaics/DEM_all ImageServer), resampled to the slice grid | Public domain (US Government work) |
 
-- Dead Quiver Trunk
-- Dead Quiver Branch 01
-- Dead Quiver Branch 02
-- Lambis Shell
+| `route-osm.json` | [OpenStreetMap](https://www.openstreetmap.org) ways (`highway=*` including `highway=steps`, `railway=tram`) and street furniture (lamps, benches, trees) in the course box 37.7945,−122.4075 → 37.8045,−122.3920, via the Overpass API: the traced route, stair counts, widths, surfaces, the F-line crossings and the props along the line | ODbL 1.0 — © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) |
 
-The meshes were decimated into levels of detail, and the textures are unchanged. Details are in
-[`public/models/debris/CREDITS.md`](public/models/debris/CREDITS.md).
+Derived tiles and the baked route in this repository are processed copies. Map data from OpenStreetMap is
+available under the Open Database License; `public/route/` is a Produced Work under ODbL.
 
-## Vendor stalls: `public/models/props/`
+### Landmarks: `public/landmarks/`
 
-Joe's fish stand and Marta's chandlery are built from [Poly Haven](https://polyhaven.com) textures and
-models under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/):
+Procedural models written by our own scripts, with no hand modelling and no third-party meshes. They are built
+offline in Blender 5.2 (headless: `node tools/landmarks/build.mjs`, which runs `tools/landmarks/build.py`) into
+three LOD GLBs each. Positions and footprints come from `landmarks-osm.json` (OpenStreetMap, ODbL) and the SF
+building footprints (Ferry Building). Published dimensions:
 
-- Textures: Weathered Brown Planks, Weathered Planks, Worn Corrugated Iron, Weathered Peeling Timber
-- Models: Wooden Crate 01 and 02, Wooden Bucket 01, Fish Knife, Wooden Cutting Board, Lifebuoy, Wooden
-  Lantern 01, Fisherman's Hat, Wooden Table 03, Metal Jerrycan (green), Plastic Jerrycan, Life Jacket, Metal
-  Toolbox, Wooden Display Shelves 01
-
-The models were decimated and the textures downsized by `tools/props/`. The signs, the chalkboard and the
-scale dial were lettered with [Permanent Marker](https://fonts.google.com/specimen/Permanent+Marker) (Apache
-2.0), [Cabin Sketch](https://fonts.google.com/specimen/Cabin+Sketch) (SIL OFL 1.1) and
-[Oswald](https://fonts.google.com/specimen/Oswald) (SIL OFL 1.1); the font files and their licences are in
-`tools/props/fonts/`. Details are in [`public/models/props/CREDITS.md`](public/models/props/CREDITS.md).
-
-## Humpback whale: `public/models/whale/`
-
-This is an original procedural model, generated by our own scripts. Its proportions follow
-published humpback anatomy, and its side profile was traced from a NOAA Fisheries illustration, a
-US government work in the public domain. The reference photographs used while modelling are not included.
-
-## Characters: `public/models/characters/`
-
-The vendors (`joe.glb`, `marta.glb`) are avatars `Wood_Male_01` and `Female_Adult_04` and their
-idle, talk, wave and shrug animations from the [Microsoft Rocketbox Avatar Library](https://github.com/microsoft/Microsoft-Rocketbox)
-(© Microsoft Corporation, MIT license, included as `LICENSE-Rocketbox.md`), converted with
-`tools/characters/` (textures resized, animations retargeted and baked). Paper: M. Gonzalez-Franco
-et al., "The Rocketbox Library and the Utility of Freely Available Rigged Avatars", Frontiers in
-Virtual Reality, 2020.
+- **Golden Gate Bridge:** main span 4,200 ft (1,280 m), side spans 1,125 ft (343 m), towers 746 ft (227 m) above
+  the water, 220 ft (67 m) clearance, 90 ft (27.4 m) deck, 25 ft stiffening truss, suspenders every 50 ft.
+  Source: Golden Gate Bridge, Highway and Transportation District, "Bridge Design & Construction Statistics"
+  (goldengate.org). International Orange colour per the District. Tower centres from OSM.
+- **Ferry Building:** 660 ft (201 m) shed, 245 ft (74.7 m) clock tower (Port of San Francisco).
+- **Coit Tower:** 210 ft (64 m) fluted column (OSM `height`; San Francisco Recreation and Parks).
+- **Transamerica Pyramid:** 853 ft (260 m), 175 ft (53 m) base, the top 212 ft spire, east and west wings
+  (OSM `height`; building fact sheets).
+- **Alcatraz:** OSM building footprints on the island; lighthouse 84 ft (26 m) per OSM `height`, other heights
+  by building type.
 
 ## Fonts
 
-[Inter](https://rsms.me/inter/) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) are both under the
-SIL Open Font License 1.1. They are loaded from Google Fonts at runtime and are not part of this repository.
+[Inter](https://rsms.me/inter/) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) (SIL Open Font License),
+loaded from Google Fonts.
 
 ## Libraries
 
-[Vite](https://vite.dev) (MIT) is an npm dependency and is not vendored here.
+[Vite](https://vite.dev) (MIT) is the build tool (npm dev dependency). The `webgpu` npm package (Dawn, BSD-3) runs
+the headless gates. No runtime dependencies.
 
 ## Techniques and references
 
@@ -87,47 +87,3 @@ These are published techniques. No code from the papers is included.
 The cloud noise, lighting and sampling scheme (`src/sky/Clouds.js`) is adapted from DRG Software Solutions'
 own *Sky Pro WebGPU*. It is published here under this repository's MIT license by its copyright holder.
 
-## SF Bay Crossing fork
-
-This repository is a fork of [Tidewater](https://github.com/dgreenheck/tidewater) (MIT, © its authors; see
-`LICENSE`), pinned at commit `1438b1abfcaee3267092b75573014f4d9b4a983c`. The island, village, reef, vegetation
-and fishing game were removed; the ocean, sky, post-processing, boat controller, player, CDLOD terrain and
-headless test harness are Tidewater's.
-
-### Geospatial data
-
-Every source is fetched by script into `data/raw/` (checksums in `data/raw/MANIFEST.sha256`). Each entry's
-licence is checked at G0.
-
-| Cached file | Source | Licence |
-|---|---|---|
-| `sf-buildings.geojson` | [San Francisco Building Footprints](https://data.sf.gov/d/ynuv-fyni) (DataSF, City and County of San Francisco): footprints with LiDAR-derived heights (`hgt_median_m`, `peak_1st_m`) | ODC PDDL 1.0 — [public domain dedication](http://opendatacommons.org/licenses/pddl/1.0/) |
-| `sausalito-osm.json` | [OpenStreetMap](https://www.openstreetmap.org) buildings around the Sausalito waterfront, via the Overpass API | ODbL 1.0 — © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) |
-| `landmarks-osm.json` | [OpenStreetMap](https://www.openstreetmap.org) landmark and waterfront features (bridge towers, Ferry Building, Coit Tower, Transamerica Pyramid, Alcatraz, Sausalito ferry terminal, Embarcadero piers), via the Overpass API | ODbL 1.0 — © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) |
-| `noaa-enc-landmarks.json`, `noaa-enc-pylons.json` | [NOAA ENC Direct to GIS](https://nauticalcharts.noaa.gov/data/enc-direct-to-gis.html) (Office of Coast Survey), harbour-scale charted landmarks and bridge pylons; used as the independent georeference (G3) | Public domain (US Government work) |
-| `ggt-gtfs.zip` | [Golden Gate Transit / Golden Gate Ferry GTFS](https://realtime.goldengate.org/gtfsstatic/GTFSTransitData.zip) (Golden Gate Bridge, Highway and Transportation District): ferry terminal positions and the published Sausalito ↔ San Francisco timetable (G3, G4) | No licence stated by the publisher; used only for facts (stop positions, published trip times) and not redistributed (the zip stays in the gitignored cache) |
-| `naip-sf.tif`, `naip-sausalito.tif`, `naip-bay.tif` | [USDA NAIP](https://naip-usdaonline.hub.arcgis.com/) aerial orthoimagery (USGS The National Map NAIP ImageServer), natural colour resampled to 1 m (building boxes: each roof's colour is the median of the pixels inside its footprint) and 4 m (the whole terrain square: the ground colour map) | Public domain (US Government work) |
-| `terrain-3dep.tif` | [USGS 3D Elevation Program](https://www.usgs.gov/3d-elevation-program) (3DEPElevation ImageServer), resampled to the slice grid | Public domain (US Government work) |
-| `noaa-datums-9414290.json` | [NOAA CO-OPS tidal datums](https://tidesandcurrents.noaa.gov/datums.html?id=9414290), San Francisco station 9414290 (sets game sea level = local MSL) | Public domain (US Government work) |
-| `bathy-ncei.tif` | [NOAA NCEI](https://www.ncei.noaa.gov/products/coastal-elevation-models) coastal DEM mosaic (topobathy; DEM_mosaics/DEM_all ImageServer), resampled to the slice grid | Public domain (US Government work) |
-
-Derived tiles in this repository are processed copies. Map data from OpenStreetMap is available under the Open
-Database License; derived building tiles for Sausalito are a Produced Work under ODbL.
-
-### Landmarks: `public/landmarks/`
-
-Procedural models written by our own scripts, with no hand modelling and no third-party meshes. They are built
-offline in Blender 5.2 (headless: `node tools/landmarks/build.mjs`, which runs `tools/landmarks/build.py`) into
-three LOD GLBs each. Positions and footprints come from `landmarks-osm.json` (OpenStreetMap, ODbL) and the SF
-building footprints (Ferry Building). Published dimensions:
-
-- **Golden Gate Bridge:** main span 4,200 ft (1,280 m), side spans 1,125 ft (343 m), towers 746 ft (227 m) above
-  the water, 220 ft (67 m) clearance, 90 ft (27.4 m) deck, 25 ft stiffening truss, suspenders every 50 ft.
-  Source: Golden Gate Bridge, Highway and Transportation District, "Bridge Design & Construction Statistics"
-  (goldengate.org). International Orange colour per the District. Tower centres from OSM.
-- **Ferry Building:** 660 ft (201 m) shed, 245 ft (74.7 m) clock tower (Port of San Francisco).
-- **Coit Tower:** 210 ft (64 m) fluted column (OSM `height`; San Francisco Recreation and Parks).
-- **Transamerica Pyramid:** 853 ft (260 m), 175 ft (53 m) base, the top 212 ft spire, east and west wings
-  (OSM `height`; building fact sheets).
-- **Alcatraz:** OSM building footprints on the island; lighthouse 84 ft (26 m) per OSM `height`, other heights
-  by building type.

@@ -1,13 +1,13 @@
 {
-  "name": "bay-crossing",
+  "name": "hillbomb-sf",
   "version": "1.0.0",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 5189",
+    "dev": "vite --host 127.0.0.1 --port 5190",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node test/engine-smoke.mjs",
     "verify": "./verify.sh",
-    "fetch-data": "node tools/data/fetch.mjs"
+    "bake-route": "node tools/route/build.mjs",
+    "fetch-route": "node tools/route/fetch.mjs"
   },
   "devDependencies": {
     "earcut": "^3.2.3",

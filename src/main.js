@@ -1,32 +1,33 @@
 import { App } from './App.js';
-import { UI } from './ui/UI.js';
-import { AppUI } from './ui/AppUI.js';
-import { TouchControls, wantsTouch } from './ui/TouchControls.js';
 
-const ui = new UI();
+// Boot: the loading screen in index.html reports the App's stages; then the game takes over (src/game/).
+const $ = ( s ) => document.querySelector( s );
+const t0 = performance.now();
+function setLoading( p, text ) {
+
+	$( '.loader-fill' ).style.width = ( p * 100 ).toFixed( 1 ) + '%';
+	$( '.loader-pct' ).textContent = Math.round( p * 100 ) + '%';
+	if ( text ) $( '.loader-status' ).textContent = text;
+	const s = Math.round( ( performance.now() - t0 ) / 1000 );
+	$( '.loader-time' ).textContent = `${ Math.floor( s / 60 ) }:${ String( s % 60 ).padStart( 2, '0' ) }`;
+
+}
+
 const app = new App();
-window.__ui = ui;
 window.__app = app; // debugging / browser checks
 
-app.init( ( p, text, until ) => ui.setLoading( p, text, until ) ).then( async () => {
+app.init( setLoading ).then( () => {
 
-	app.ui = new AppUI( app, ui );
-	if ( wantsTouch( app.qs ) ) app.touch = new TouchControls( app );
-	ui.setLoading( 1, 'Ready' );
-	await ui.hideLoader();
+	setLoading( 1, 'Ready' );
+	const l = $( '#loader' );
+	l.classList.add( 'is-done' );
+	setTimeout( () => l.remove(), 700 );
 	app.start();
-	ui.showStartOverlay( () => {
-
-		document.documentElement.classList.add( 'is-started' );
-
-		app.input.requestLock();
-		if ( app.audio ) app.audio.resume();
-
-	} );
 
 } ).catch( ( e ) => {
 
 	console.error( e );
-	ui.setLoadingError( 'Something went wrong: ' + e.message );
+	$( '.loader-status' ).textContent = 'Something went wrong: ' + e.message;
+	$( '#loader' ).classList.add( 'is-error' );
 
 } );
