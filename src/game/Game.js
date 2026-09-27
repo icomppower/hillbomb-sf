@@ -121,7 +121,6 @@ export class Game {
 		this.hud.hideScreens();
 		this.hud.setRacing( true );
 		this.audio.resume();
-		this.app.input.requestLock?.();
 
 	}
 

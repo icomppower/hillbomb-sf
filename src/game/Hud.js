@@ -186,6 +186,9 @@ export class Hud {
 	// ---- screens
 	_screen( el, html ) {
 
+		// menus need the cursor: never leave the pointer locked behind a screen
+		if ( el && document.pointerLockElement ) document.exitPointerLock?.();
+
 		for ( const s of [ this.el.title, this.el.pause, this.el.settings, this.el.results ] ) s.classList.toggle( 'is-on', s === el && !! html );
 		if ( ! el ) return null;
 		if ( html ) el.firstElementChild.innerHTML = html;
