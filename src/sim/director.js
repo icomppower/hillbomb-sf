@@ -5,7 +5,10 @@ import { predictAirTime } from './bike.js';
 
 // minShot: s between cuts; skyline: s the skyline wide holds; finishReverse: m before the line; airMin: s of
 // predicted air that calls the side-dolly
-export const DIRECTOR = { minShot: 4, skyline: 5, finishReverse: 120, airMin: 0.6 };
+// rivalAfter: s of racing before the rival cam may fire (the grid is bunched); rivalClosing: m/s of closing speed
+// that counts as a pass; stepsMin: m, the shortest flight worth the stair camera; chaseMin: s the chase holds after
+// a cut back to it (no ping-pong)
+export const DIRECTOR = { minShot: 4, skyline: 5, finishReverse: 120, airMin: 0.6, rivalAfter: 12, rivalClosing: 1.5, stepsMin: 20, chaseMin: 6 };
 // fixed world points for the skyline wide: Coit Tower, and the Bay Bridge's west span beyond the bay
 const COIT = { x: 2803, z: 2744 };
 const BAY_BRIDGE = { x: 5785, z: 3433 };
@@ -38,11 +41,11 @@ export class Director {
 		const age = this.time - sh.t0;
 		const remaining = b.air ? predictAirTime( b, r ) : 0;
 		const landingApproach = b.air && remaining < 0.6;
-		const canCut = age >= DIRECTOR.minShot && ! landingApproach;
+		const canCut = age >= ( sh.name === 'chase' && sh.t0 > 0 ? DIRECTOR.chaseMin : DIRECTOR.minShot ) && ! landingApproach;
 
 		// what the state asks for, by priority
 		let want = 'chase', params = {};
-		const flight = r.flights.find( ( f ) => b.s > f.s0 - 4 && b.s < f.s1 - 1 && ( f.s1 - f.s0 ) >= 5 );
+		const flight = r.flights.find( ( f ) => b.s > f.s0 - 4 && b.s < f.s1 - 1 && ( f.s1 - f.s0 ) >= DIRECTOR.stepsMin );
 		const sec = r.sections[ r.sectionAt( b.s ) ].name;
 		let rival = null;
 		for ( const o of race.riders ) {
@@ -50,7 +53,8 @@ export class Director {
 			if ( o === race.player || o.bike.crash > 0 ) continue;
 			const gap = Math.abs( o.bike.s - b.s ), prev = this.lastRivalGap.get( o.index ) ?? gap;
 			this.lastRivalGap.set( o.index, gap );
-			if ( gap < 3 && gap < prev - 1e-4 && ! rival ) rival = o;
+			// a real pass: close, closing fast, and not the start bunch
+			if ( gap < 3 && ( prev - gap ) / dt >= DIRECTOR.rivalClosing && race.t >= DIRECTOR.rivalAfter && ! rival ) rival = o;
 
 		}
 
