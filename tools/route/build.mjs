@@ -7,7 +7,7 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadTerrain, loadOSM, geoToLocal, ROOT } from './lib.mjs';
+import { loadTerrain, loadOSM, geoToLocal, landmarkHulls, ROOT } from './lib.mjs';
 import { readCached } from '../data/cache.mjs';
 
 const args = process.argv.slice( 2 );
@@ -361,44 +361,6 @@ const SURF = C.map( ( c ) => c.surface );
 // are extruded, plus the ground-level hull of each landmark model), capped at 15 m. The ribbon and the corridor
 // limits never reach into a wall.
 const WALL_CAP = 15;
-function landmarkHulls() {
-
-	const idx = JSON.parse( readFileSync( join( ROOT, 'public/landmarks/index.json' ), 'utf8' ) );
-	const hulls = [];
-	for ( const l of idx.landmarks ) {
-
-		const b = readFileSync( join( ROOT, 'public/landmarks', l.lods[ 0 ].name ) );
-		const jl = b.readUInt32LE( 12 ), js = JSON.parse( b.subarray( 20, 20 + jl ).toString() ), bin = b.subarray( 20 + jl + 8 );
-		const pts = [];
-		for ( const node of js.nodes ) {
-
-			if ( node.mesh === undefined ) continue;
-			const a = js.accessors[ js.meshes[ node.mesh ].primitives[ 0 ].attributes.POSITION ], bv = js.bufferViews[ a.bufferView ];
-			const off = ( bv.byteOffset || 0 ) + ( a.byteOffset || 0 ), t = node.translation || [ 0, 0, 0 ];
-			for ( let i = 0; i < a.count; i ++ ) {
-
-				const y = bin.readFloatLE( off + i * 12 + 4 );
-				if ( y > ( l.ground || 0 ) + 12 ) continue;
-				pts.push( { x: bin.readFloatLE( off + i * 12 ) + t[ 0 ], z: bin.readFloatLE( off + i * 12 + 8 ) + t[ 2 ] } );
-
-			}
-
-		}
-
-		if ( pts.length < 3 ) continue;
-		pts.sort( ( a, b ) => a.x - b.x || a.z - b.z );
-		const cross = ( o, a, b ) => ( a.x - o.x ) * ( b.z - o.z ) - ( a.z - o.z ) * ( b.x - o.x );
-		const lo = [], hi = [];
-		for ( const p of pts ) { while ( lo.length >= 2 && cross( lo[ lo.length - 2 ], lo[ lo.length - 1 ], p ) <= 0 ) lo.pop(); lo.push( p ); }
-		for ( let i = pts.length - 1; i >= 0; i -- ) { const p = pts[ i ]; while ( hi.length >= 2 && cross( hi[ hi.length - 2 ], hi[ hi.length - 1 ], p ) <= 0 ) hi.pop(); hi.push( p ); }
-		hulls.push( { name: l.name, pts: lo.slice( 0, - 1 ).concat( hi.slice( 0, - 1 ) ) } );
-
-	}
-
-	return hulls;
-
-}
-
 const polys = [];
 {
 

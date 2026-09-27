@@ -3,9 +3,9 @@
 // at least 4 s apart and never happen while the player is on a landing approach.
 import { predictAirTime } from './bike.js';
 
-export const MIN_SHOT = 4; // s between cuts
-const SKYLINE_TIME = 5;
-const FINISH_REVERSE = 120; // m before the line
+// minShot: s between cuts; skyline: s the skyline wide holds; finishReverse: m before the line; airMin: s of
+// predicted air that calls the side-dolly
+export const DIRECTOR = { minShot: 4, skyline: 5, finishReverse: 120, airMin: 0.6 };
 // fixed world points for the skyline wide: Coit Tower, and the Bay Bridge's west span beyond the bay
 const COIT = { x: 2803, z: 2744 };
 const BAY_BRIDGE = { x: 5785, z: 3433 };
@@ -38,7 +38,7 @@ export class Director {
 		const age = this.time - sh.t0;
 		const remaining = b.air ? predictAirTime( b, r ) : 0;
 		const landingApproach = b.air && remaining < 0.6;
-		const canCut = age >= MIN_SHOT && ! landingApproach;
+		const canCut = age >= DIRECTOR.minShot && ! landingApproach;
 
 		// what the state asks for, by priority
 		let want = 'chase', params = {};
@@ -54,9 +54,9 @@ export class Director {
 
 		}
 
-		if ( race.phase !== 'countdown' && r.length - b.s < FINISH_REVERSE ) want = 'finish';
-		else if ( b.air && b.airtime < 0.25 && b.airtime + remaining > 0.6 ) { want = 'air'; params = { side: this._openSide( b.s ) }; }
-		else if ( ! this.skylineUsed && race.t >= MIN_SHOT && b.s > r.sections[ 1 ].s0 && b.s < r.sections[ 2 ].s0 - 10 ) want = 'skyline';
+		if ( race.phase !== 'countdown' && r.length - b.s < DIRECTOR.finishReverse ) want = 'finish';
+		else if ( b.air && b.airtime < 0.25 && b.airtime + remaining > DIRECTOR.airMin ) { want = 'air'; params = { side: this._openSide( b.s ) }; }
+		else if ( ! this.skylineUsed && race.t >= DIRECTOR.minShot && b.s > r.sections[ 1 ].s0 && b.s < r.sections[ 2 ].s0 - 10 ) want = 'skyline';
 		else if ( flight && /Filbert/.test( sec ) ) { want = 'steps'; params = { flight: r.flights.indexOf( flight ), side: this._openSide( ( flight.s0 + flight.s1 ) / 2 ) }; }
 		else if ( rival ) { want = 'rival'; params = { rival: rival.index }; }
 
@@ -65,7 +65,7 @@ export class Director {
 			chase: false,
 			finish: true,
 			air: b.air || this.time - ( sh.landedAt ?? this.time ) < 0.6,
-			skyline: age < SKYLINE_TIME,
+			skyline: age < DIRECTOR.skyline,
 			steps: sh.flight !== undefined && b.s < r.flights[ sh.flight ].s1 + 3,
 			rival: rival !== null,
 		};

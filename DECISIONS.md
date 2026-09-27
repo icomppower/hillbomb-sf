@@ -44,7 +44,10 @@ removals from the bay-crossing fork are logged here with a reason. bay-crossing'
 - **D10** Measured at first bake: 1,659 m, 87.5 m drop (89.4 → 2.0 m local MSL), 13 stair flights. The spec's
   expectation was 1.8–2.2 km / ≈ 80 m; the real line from the terrace is shorter once the corners are smoothed. The
   measured values are frozen in `SPEC-THRESHOLDS.md`.
-- **D11** Curvature clamp: minimum radius max( 5 m, half-width + 2.5 m ), every violator smoothed per round.
+- **D11** Curvature clamp: minimum radius max( 5 m, half-width + 2.5 m ), every violator smoothed per round. Where the
+  OSM line makes a U-turn narrower than that (the switchback from Telegraph Hill Blvd onto the top of the Filbert Steps is
+  ~6 m across) the smoothed line takes a chord across the slope inside it: the Blvd via node there ends up 20 m off the
+  line. G3 reports the worst via distance but gates only what SPEC §12 names (start, finish, Filbert Steps endpoints).
 - **D12** Walls: the bake stores the free distance to the nearest building (DataSF footprints + landmark hulls) on
   each side of every sample. Where a wall reaches into the corridor (the foot of the Filbert Steps runs hard along an
   apartment block) the centreline is pushed into the gap, narrowing the path only if the gap is narrower. The ribbon

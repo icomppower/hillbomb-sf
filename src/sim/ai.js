@@ -14,9 +14,9 @@ export const PROFILES = {
 	// the jump hunter: gaps every flight, flips every kicker, saves boost for the Embarcadero
 	SUTRO: { name: 'SUTRO', topSpeed: 30, brakesInBends: false, cornerUse: 0.75, brakeUse: 0.7, brakeSlack: 1, apex: 26, stairsSpeed: 10, gap: true, tricks: true,
 		kickers: 'seek', wetCare: 0.6, boost: 'sprint', aggression: 0, mass: 0.95, risk: 0.5, hopLips: true, jitter: 0.06 },
-	// the player's autopilot: clean and quick, no stunts
+	// the player's autopilot: clean and quick, hops the kickers it can land, no flips
 	AUTO: { name: 'AUTO', topSpeed: 28.5, brakesInBends: false, cornerUse: 0.8, brakeUse: 0.75, brakeSlack: 1, apex: 24, stairsSpeed: 9, gap: false, tricks: false,
-		kickers: 'avoid', wetCare: 1, boost: 'sprint', aggression: 0, mass: 1, risk: 0, hopLips: false, jitter: 0 },
+		kickers: 'seek', wetCare: 1, boost: 'sprint', aggression: 0, mass: 1, risk: 0, hopLips: true, jitter: 0 },
 };
 
 const TWO_PI = Math.PI * 2;

@@ -21,13 +21,12 @@ const GRID = [ [ 4.5, - 1.1 ], [ 4.5, 1.1 ], [ 1.5, - 1.1 ], [ 1.5, 1.1 ] ];
 const CONTACT_LEN = 1.6; // m along the line (two bikes' capsules)
 const CONTACT_WIDTH = 0.75; // m side by side
 const CONTACT_SCRUB = 0.08; // speed lost by both on contact
-const WET_RISE = 1 / 20; // the marine layer soaks the ground over 20 s
-const WET_FALL = 1 / 25; // and dries over 25 s
-// the marine layer is densest near the water: ground below this height soaks up to twice as fast as the summit
-const WET_BAND = 45;
+// the marine layer: it soaks the ground over 20 s and dries over 25 s; ground below `band` m soaks up to twice as
+// fast as the summit (densest near the water); the lens mists in while the air is wet
+export const WEATHER = { rise: 1 / 20, fall: 1 / 25, band: 45, lensRise: 0.6, lensFall: 0.15 };
 
 // the wet factor on the ground at height y (local MSL m), from the layer's overall wet factor
-export const wetAt = ( wet, y ) => Math.min( 1, wet * ( 1 + Math.max( 0, WET_BAND - y ) / WET_BAND ) );
+export const wetAt = ( wet, y ) => Math.min( 1, wet * ( 1 + Math.max( 0, WEATHER.band - y ) / WEATHER.band ) );
 
 export class Race {
 
@@ -168,11 +167,11 @@ export class Race {
 	_weather( dt ) {
 
 		const w = this.weather;
-		if ( w.wet < w.target ) w.wet = Math.min( w.target, w.wet + WET_RISE * dt );
-		else if ( w.wet > w.target ) w.wet = Math.max( w.target, w.wet - WET_FALL * dt );
-		// drizzle on the lens while the air is wet; it dries off faster than the ground
-		if ( w.wet > 0.03 && w.target > 0 ) w.lens = Math.min( 1, w.lens + dt * 0.6 );
-		else w.lens = Math.max( 0, w.lens - dt * 0.15 );
+		if ( w.wet < w.target ) w.wet = Math.min( w.target, w.wet + WEATHER.rise * dt );
+		else if ( w.wet > w.target ) w.wet = Math.max( w.target, w.wet - WEATHER.fall * dt );
+		// drizzle on the lens while the air is wet; it clears once the layer lifts
+		if ( w.wet > 0.03 && w.target > 0 ) w.lens = Math.min( 1, w.lens + dt * WEATHER.lensRise );
+		else w.lens = Math.max( 0, w.lens - dt * WEATHER.lensFall );
 
 	}
 
