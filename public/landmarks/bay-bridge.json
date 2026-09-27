@@ -1,0 +1,76 @@
+{
+ "format": "hillbomb-baybridge/1",
+ "name": "San Francisco–Oakland Bay Bridge (West Span)",
+ "source": "deck line: OpenStreetMap ways 8921938 + 23874736 (ODbL); layout: published span lengths, tower height and clearance",
+ "deckHeight": 72,
+ "towerHeight": 160.3,
+ "width": 20,
+ "deck": [
+  [
+   4143.39,
+   4530.95
+  ],
+  [
+   6275.47,
+   1989.22
+  ]
+ ],
+ "deckFrom": 448,
+ "deckLength": 3317.56,
+ "stations": [
+  {
+   "kind": "anchorage",
+   "d": 448,
+   "x": 4431.95,
+   "z": 4188.27,
+   "ground": -0.1
+  },
+  {
+   "kind": "tower",
+   "d": 801.6,
+   "x": 4659.12,
+   "z": 3917.3,
+   "ground": -22.7
+  },
+  {
+   "kind": "tower",
+   "d": 1505.7,
+   "x": 5111.48,
+   "z": 3377.73,
+   "ground": -24.55
+  },
+  {
+   "kind": "anchorage",
+   "d": 1859.3,
+   "x": 5338.65,
+   "z": 3106.76,
+   "ground": -24.93
+  },
+  {
+   "kind": "tower",
+   "d": 2212.9,
+   "x": 5565.83,
+   "z": 2835.79,
+   "ground": -25.22
+  },
+  {
+   "kind": "tower",
+   "d": 2917,
+   "x": 6018.18,
+   "z": 2296.23,
+   "ground": -26.5
+  },
+  {
+   "kind": "anchorage",
+   "d": 3270.6,
+   "x": 6245.32,
+   "z": 2025.22,
+   "ground": -29.22
+  }
+ ],
+ "sfEnd": [
+  4143.39,
+  4530.95,
+  20.45
+ ]
+}

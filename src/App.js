@@ -22,6 +22,7 @@ import { Environment } from './sky/Environment.js';
 import { loadBayHeightField } from './world/BayTerrain.js';
 import { loadBayBuildings } from './world/BayBuildings.js';
 import { loadLandmarks } from './world/Landmarks.js';
+import { loadBayBridge } from './world/BayBridge.js';
 import { TerrainGPU } from './world/TerrainGPU.js';
 import { Terrain } from './world/Terrain.js';
 import { computeShoreField } from './world/ShoreField.js';
@@ -145,6 +146,9 @@ export class App {
 		// Ferry Building, Coit Tower, Transamerica (offline Blender LOD GLBs); Golden Gate + Alcatraz as far backdrop
 		this.landmarks = await loadLandmarks();
 		scene.add( this.landmarks );
+		// the Bay Bridge West Span, far backdrop (OSM deck + published spans, tools/landmarks/baybridge.mjs)
+		this.bayBridge = await loadBayBridge();
+		scene.add( this.bayBridge );
 		this.buildings.userData.lodBias = this.landmarks.userData.lodBias = Q.lodBias;
 		this.roofs = new RoofGrid( [ ...this.buildings.children.map( ( t ) => t.userData.lods[ 0 ] ), ...this.landmarks.children.map( ( l ) => l.userData.lods[ 0 ] ) ], WORLD.terrainSize );
 
@@ -174,6 +178,7 @@ export class App {
 		} );
 		underwaterMode( this.buildings, 'lite' );
 		underwaterMode( this.landmarks, 'lite' );
+		underwaterMode( this.bayBridge, 'lite' );
 
 		this.underwaterLighting = installUnderwaterLighting( {
 			fft: this.fft, caustics: this.caustics, clouds: this.clouds, terrain: this.terrainGPU,

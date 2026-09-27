@@ -85,3 +85,13 @@ removals from the bay-crossing fork are logged here with a reason. bay-crossing'
   (spec ≈ 35 %), SUTRO 57 % (spec ≈ 50 %), all finish, spread ≤ 25 % on the gate seeds. DOGPATCH's crashes come at the
   tight wet corner below the last flight rather than on the wooden flights themselves: the wooden flights are nearly
   straight, so speed alone does not throw a rider off them; the spec's "mostly on wet wood" holds only loosely.
+
+## World additions
+
+- **D22** The Bay Bridge West Span, for the skyline wide (SPEC §7 wants Coit Tower, the bay and the Bay Bridge in one
+  frame; bay-crossing never modelled the bridge). The deck line is OSM (a second cached, checksummed, ODbL source:
+  `data/raw/baybridge-osm.json`, fetched by `tools/landmarks/fetch-baybridge.mjs`); the layout is published span
+  lengths, tower height and clearance (`tools/landmarks/baybridge.mjs` → `public/landmarks/bay-bridge.json`); built at
+  load as one backdrop mesh (`src/world/BayBridge.js`). Most of it lies east of the terrain domain, over open water.
+- **D23** Audio needs ffmpeg with libopus; this machine has none on PATH, so `ffmpeg-static` is a dev dependency
+  (`tools/audio/lib.mjs` falls back to it). The game ships no runtime dependencies.

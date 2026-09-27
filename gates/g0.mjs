@@ -16,6 +16,14 @@ function checkCache( raw ) {
 	if ( ! existsSync( man ) ) return [ 'cache: MANIFEST.sha256 missing' ];
 	const want = Object.fromEntries( readFileSync( man, 'utf8' ).trim().split( '\n' ).map( ( l ) => l.split( /\s+/ ).reverse() ) );
 	const file = 'route-osm.json';
+	const sources0 = JSON.parse( readFileSync( join( raw, 'sources.json' ), 'utf8' ) );
+	for ( const extra of [ 'baybridge-osm.json' ] ) {
+
+		if ( ! want[ extra ] || ! existsSync( join( raw, extra ) ) ) fail.push( `cache: ${ extra } missing or not in MANIFEST.sha256` );
+		if ( ! /ODbL/.test( ( sources0[ extra ] || {} ).licence || '' ) ) fail.push( `licence: ${ extra } has no ODbL licence entry` );
+
+	}
+
 	if ( ! want[ file ] ) fail.push( `cache: ${ file } not in MANIFEST.sha256` );
 	else if ( ! existsSync( join( raw, file ) ) ) fail.push( `cache: ${ file } missing` );
 	else if ( sha( join( raw, file ) ) !== want[ file ] ) fail.push( `cache: ${ file } checksum mismatch` );
@@ -63,7 +71,7 @@ const fixture = ( name, mutate ) => ( {
 		const d = join( fx, name.replace( /\W+/g, '-' ) );
 		rmSync( d, { recursive: true, force: true } );
 		mkdirSync( join( d, 'raw' ), { recursive: true } );
-		for ( const f of [ 'MANIFEST.sha256', 'sources.json', 'route-osm.json' ] ) cpSync( join( RAW, f ), join( d, 'raw', f ) );
+		for ( const f of [ 'MANIFEST.sha256', 'sources.json', 'route-osm.json', 'baybridge-osm.json' ] ) cpSync( join( RAW, f ), join( d, 'raw', f ) );
 		mkdirSync( join( d, 'pub' ) );
 		for ( const t of [ 'terrain', 'buildings', 'landmarks' ] ) cpSync( join( PUB, t ), join( d, 'pub', t ), { recursive: true } );
 		mutate( d );

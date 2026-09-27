@@ -17,3 +17,5 @@ changing a frozen value needs a BLOCKED.md.
 - `G2.section8`: 1556 — s0 (m) of "Ferry Building" at first bake; ± 5 m
 - `G4.finishMin`: 94.1 — player autopilot (AUTO), seed 1, finish time − 10 %; measured 104.64 s (2026-09-27)
 - `G4.finishMax`: 115.2 — player autopilot (AUTO), seed 1, finish time + 10 %; measured 104.64 s
+- `G8.fpsFloor`: 46 — 95th-percentile fps on the race path (gates/g8.mjs), 1920×1080, low tier, M4 (Metal); measured 58.7 fps (p95 17.0 ms, CPU+GPU serialised) on 2026-09-27; floor = max( 40, 0.8 × measured )
+- `G8.gpuMemoryMB`: 863 — GPU memory (footprint "(graphics)" categories: Metal allocations) of the App process on the path, peak; measured 690 MB on 2026-09-27; cap = 1.25 × measured

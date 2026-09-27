@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Runs every gate in SPEC §5. Each gate is gates/<id>.mjs and is run twice:
+# Runs every gate in SPEC §12 (HILLBOMB SF). Each gate is gates/<id>.mjs and is run twice:
 #   node gates/<id>.mjs --negative   must exit non-zero and print "NEGATIVE n/n" (every mutation caught, run finished)
 #   node gates/<id>.mjs              must exit zero
-# A gate is green only when both hold (D11). G6 is advisory (D12).
+# A gate is green only when both hold. When all are green in one run, DONE is written.
 # Usage: ./verify.sh            all gates
 #        ./verify.sh g2a g3     just those
 set -u
 cd "$(dirname "$0")"
 
-REQUIRED=(g0 g1 g2a g2b g2c g3 g4 g5 g7)
-ADVISORY=(g6)
-if [ $# -gt 0 ]; then SELECTED=("$@"); else SELECTED=("${REQUIRED[@]}" "${ADVISORY[@]}"); fi
+REQUIRED=(g0 g1 g2 g3 g4 g5 g6 g7 g8 g9 g10)
+ADVISORY=()
+if [ $# -gt 0 ]; then SELECTED=("$@"); else SELECTED=("${REQUIRED[@]}"); fi
 
 mkdir -p .verify
 fail=0
@@ -18,7 +18,6 @@ summary=""
 for id in "${SELECTED[@]}"; do
   script="gates/$id.mjs"
   advisory=0
-  for a in "${ADVISORY[@]}"; do [ "$a" = "$id" ] && advisory=1; done
 
   if [ ! -f "$script" ]; then
     status="FAIL (not implemented)"
@@ -49,5 +48,5 @@ done
 echo
 echo "===== verify.sh summary ====="
 printf '%s' "$summary"
-if [ $fail -ne 0 ]; then echo "RED"; elif [ $# -gt 0 ]; then echo "SELECTED GATES GREEN (run ./verify.sh with no arguments for DONE)"; else echo "ALL REQUIRED GATES GREEN"; fi
+if [ $fail -ne 0 ]; then echo "RED"; elif [ $# -gt 0 ]; then echo "SELECTED GATES GREEN (run ./verify.sh with no arguments for DONE)"; else echo "ALL REQUIRED GATES GREEN"; { echo "HILLBOMB SF — G0–G10 green in one clean ./verify.sh run, $(date -u +%Y-%m-%dT%H:%MZ), commit $(git rev-parse --short HEAD)"; printf '%s' "$summary"; } > DONE; fi
 exit $fail
